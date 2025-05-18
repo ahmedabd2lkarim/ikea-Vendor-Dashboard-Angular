@@ -1,0 +1,35 @@
+<div class="dashboard-container">
+  <button class="add-btn" [routerLink]="['/products/new']">
+    Add Product
+  </button>
+
+  <mat-card class="analytics-card">
+    <mat-card-header>
+      <mat-card-title>Total Revenue</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <h2 class="revenue">{{ totalRevenue | currency }}</h2>
+    </mat-card-content>
+  </mat-card>
+
+  <div class="charts-container">
+    <!-- Order Status Chart -->
+    <div class="chart-card">
+      <h3>Orders by Status</h3>
+      <canvas #orderStatusChart></canvas>
+    </div>
+    <!-- Category Distribution Chart -->
+    <div class="chart-card">
+      <h3>Product Categories</h3>
+      <canvas #categoryChart></canvas>
+    </div>
+
+  </div>
+
+  <div class="chart-card">
+    <h3>Product Inventory Levels</h3>
+    <canvas #inventoryChart></canvas>
+  </div>
+  
+
+</div>
