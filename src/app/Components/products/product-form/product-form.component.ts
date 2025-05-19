@@ -4,37 +4,9 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Icategory } from '../../../Models/icategory';
 import { ProductsWithApiService } from '../../../Services/products-with-api.service';
+import { IProduct } from '../../../Models/iproduct';
 
-export interface ProductFormData {
-  _id?: string;
-  name: {
-    en: string;
-    ar: string;
-  };
-  description: {
-    en: string;
-    ar: string;
-  };
-  images: string[];
-  price: {
-    currentPrice: number;
-    currency?: string;
-  };
-  stockQuantity: number;
-  inStock: boolean;
-  vendorId: string;
-  vendorName: string;
-  categoryId: string;
-  categoryName: string;
-  measurement: string;
-  unit: string;
-  variants: Array<{
-    name: string;
-    value: string;
-    price?: number;
-    stockQuantity?: number;
-  }>;
-}
+export type ProductFormData = IProduct; 
 
 @Component({
   selector: 'app-product-form',
@@ -48,9 +20,14 @@ export class ProductFormComponent implements OnInit {
 
   productForm!: FormGroup;
   categories: Icategory[] = [];
-  availableUnits = ['piece', 'kg', 'gram', 'liter', 'ml', 'box', 'pack'];
+  measurementUnits = ['mm', 'cm', 'm', 'inch', 'ft'];
+  weightUnits = ['g', 'kg', 'lb', 'oz'];
   isLoading = false;
   showVariantsSection = false;
+  showMeasurementSection = false;
+  showWeightSection = false;
+  showProductDetailsSection = false;
+  currentUserId = ''; // This should come from auth service
   
   constructor(
     private fb: FormBuilder,
@@ -62,6 +39,7 @@ export class ProductFormComponent implements OnInit {
   ngOnInit(): void {
     this.initializeForm();
     this.loadCategories();
+    this.loadCurrentUser();
     
     // Check if we're in edit mode
     this.route.params.subscribe(params => {
@@ -75,100 +53,114 @@ export class ProductFormComponent implements OnInit {
 
   initializeForm(): void {
     this.productForm = this.fb.group({
-      name: this.fb.group({
+      name: ['', Validators.required],
+      color: this.fb.group({
         en: ['', Validators.required],
-        ar: ['']
+        ar: ['', Validators.required]
       }),
-      description: this.fb.group({
-        en: ['', Validators.required],
-        ar: ['']
-      }),
-      images: this.fb.array([this.createImageControl()]),
       price: this.fb.group({
+        currency: ['EGP', Validators.required],
         currentPrice: [0, [Validators.required, Validators.min(0.01)]],
-        currency: ['EGP']
+        discounted: [false]
       }),
-      stockQuantity: [0, [Validators.required, Validators.min(0)]],
-      inStock: [true],
-      vendorId: ['', Validators.required],
-      vendorName: ['', Validators.required],
+      measurement: this.fb.group({
+        width: [null],
+        height: [null],
+        depth: [null],
+        length: [null],
+        unit: ['cm', Validators.required]
+      }),
+      typeName: this.fb.group({
+        en: ['', Validators.required],
+        ar: ['', Validators.required]
+      }),
+      contextualImageUrl: ['', Validators.pattern(/https?:\/\/.+/)],
+      images: ['', Validators.required], // Textarea for multiple URLs
+      short_description: this.fb.group({
+        en: ['', Validators.required],
+        ar: ['', Validators.required]
+      }),
+      product_details: this.fb.group({
+        product_details_paragraphs: this.fb.group({
+          en: [''], // Textarea for multiple paragraphs
+          ar: ['']  // Textarea for multiple paragraphs
+        }),
+        expandable_sections: this.fb.group({
+          materials_and_care: this.fb.group({
+            en: [''],
+            ar: ['']
+          }),
+          details_certifications: this.fb.group({
+            en: [''],
+            ar: ['']
+          }),
+          good_to_know: this.fb.group({
+            en: [''],
+            ar: ['']
+          }),
+          safety_and_compliance: this.fb.group({
+            en: [''],
+            ar: ['']
+          }),
+          assembly_and_documents: this.fb.group({
+            en: [''],
+            ar: ['']
+          })
+        })
+      }),
+      vendorId: [this.currentUserId, Validators.required],
       categoryId: ['', Validators.required],
+      vendorName: [''],
       categoryName: [''],
-      measurement: [''],
-      unit: ['piece', Validators.required],
-      variants: this.fb.array([])
+      variants: this.fb.array([]),
+      inStock: [true],
+      stockQuantity: [0, [Validators.required, Validators.min(0)]],
+      weight: this.fb.group({
+        value: [null],
+        unit: ['kg']
+      }),
+      fullUrl: ['']
     });
+
+    // Add custom validator for measurement (at least one field required)
+    this.productForm.get('measurement')?.setValidators(this.measurementValidator);
 
     // Update category name when category changes
     this.productForm.get('categoryId')?.valueChanges.subscribe(categoryId => {
       const category = this.categories.find(cat => cat._id === categoryId);
-      this.productForm.patchValue({ categoryName: category?.name || '' });
+      if (category) {
+        // Assuming category has a name property
+        this.productForm.patchValue({ categoryName: category.name });
+      }
     });
   }
 
-  // Images FormArray methods
-  get imagesArray(): FormArray {
-    return this.productForm.get('images') as FormArray;
-  }
-
-  getImageControls(): FormGroup[] {
-    return this.imagesArray.controls as FormGroup[];
-  }
-
-  createImageControl(): FormGroup {
-    return this.fb.group({
-      url: ['', [Validators.required, Validators.pattern(/https?:\/\/.+/)]],
-      alt: ['']
-    });
-  }
-
-  addImageField(): void {
-    this.imagesArray.push(this.createImageControl());
-  }
-
-  removeImageField(index: number): void {
-    if (this.imagesArray.length > 1) {
-      this.imagesArray.removeAt(index);
+  // Custom validator for measurement - at least one field must be filled
+  measurementValidator = (group: AbstractControl) => {
+    if (!this.showMeasurementSection) return null;
+    
+    const width = group.get('width')?.value;
+    const height = group.get('height')?.value;
+    const depth = group.get('depth')?.value;
+    const length = group.get('length')?.value;
+    
+    if (!width && !height && !depth && !length) {
+      return { requireAtLeastOne: true };
     }
-  }
+    return null;
+  };
 
-  // Image helper methods for template
-  getImageUrl(index: number): string {
-    const control = this.imagesArray.at(index);
-    return control?.get('url')?.value || '';
-  }
-
-  getImageAlt(index: number): string {
-    const control = this.imagesArray.at(index);
-    return control?.get('alt')?.value || '';
-  }
-
-  isImageFieldInvalid(index: number, fieldName: string): boolean {
-    const control = this.imagesArray.at(index)?.get(fieldName);
-    return !!(control?.invalid && control?.touched);
-  }
-
-  getImageFieldError(index: number, fieldName: string): string {
-    const control = this.imagesArray.at(index)?.get(fieldName);
-    if (control?.errors && control.touched) {
-      if (control.errors['required']) return 'This field is required';
-      if (control.errors['pattern']) return 'Please enter a valid URL';
-    }
-    return '';
-  }
-
-  onImageError(event: Event): void {
-    const img = event.target as HTMLImageElement;
-    if (img) {
-      img.style.display = 'none';
-    }
-  }
-
-  onImageLoad(event: Event): void {
-    const img = event.target as HTMLImageElement;
-    if (img) {
-      img.style.display = 'block';
-    }
+  // Load current user from auth service
+  loadCurrentUser(): void {
+    // TODO: Replace with actual auth service call
+    // this.authService.getCurrentUser().subscribe(user => {
+    //   this.currentUserId = user.id;
+    //   this.productForm.patchValue({ vendorId: this.currentUserId });
+    // });
+    
+    // Temporary placeholder
+    this.currentUserId = 'temp-vendor-id';
+    this.productForm.patchValue({ vendorId: this.currentUserId });
   }
 
   // Variants FormArray methods
@@ -204,6 +196,47 @@ export class ProductFormComponent implements OnInit {
     }
   }
 
+  toggleMeasurementSection(): void {
+    this.showMeasurementSection = !this.showMeasurementSection;
+    if (!this.showMeasurementSection) {
+      this.productForm.get('measurement')?.reset({
+        width: null,
+        height: null,
+        depth: null,
+        length: null,
+        unit: 'cm'
+      });
+    }
+    // Update validator when section is toggled
+    this.productForm.get('measurement')?.updateValueAndValidity();
+  }
+
+  toggleWeightSection(): void {
+    this.showWeightSection = !this.showWeightSection;
+    if (!this.showWeightSection) {
+      this.productForm.get('weight')?.reset({
+        value: null,
+        unit: 'kg'
+      });
+    }
+  }
+
+  toggleProductDetailsSection(): void {
+    this.showProductDetailsSection = !this.showProductDetailsSection;
+    if (!this.showProductDetailsSection) {
+      this.productForm.get('product_details')?.reset({
+        product_details_paragraphs: { en: '', ar: '' },
+        expandable_sections: {
+          materials_and_care: { en: '', ar: '' },
+          details_certifications: { en: '', ar: '' },
+          good_to_know: { en: '', ar: '' },
+          safety_and_compliance: { en: '', ar: '' },
+          assembly_and_documents: { en: '', ar: '' }
+        }
+      });
+    }
+  }
+
   // Variant helper methods for template
   isVariantFieldInvalid(index: number, fieldName: string): boolean {
     const control = this.variantsArray.at(index)?.get(fieldName);
@@ -219,9 +252,18 @@ export class ProductFormComponent implements OnInit {
     return '';
   }
 
-  // Currency helper method
-  getCurrentCurrency(): string {
-    return this.productForm.get('price')?.get('currency')?.value || 'EGP';
+  // Helper method to convert textarea to array
+  private textareaToArray(text: string): string[] {
+    if (!text || text.trim() === '') return [];
+    return text.split('\n')
+      .map(line => line.trim())
+      .filter(line => line !== '');
+  }
+
+  // Helper method to convert array to textarea
+  private arrayToTextarea(array: string[] | undefined): string {
+    if (!array || array.length === 0) return '';
+    return array.join('\n');
   }
 
   loadCategories(): void {
@@ -251,45 +293,53 @@ export class ProductFormComponent implements OnInit {
     });
   }
 
-  populateForm(product: any): void {
-    // Handle the case where product might not have localized fields
-    const name = typeof product.name === 'string' 
-      ? { en: product.name, ar: '' }
-      : product.name || { en: '', ar: '' };
-
-    const description = typeof product.description === 'string'
-      ? { en: product.description, ar: '' }
-      : product.description || { en: '', ar: '' };
-
-    // Clear existing images and populate with product images
-    this.imagesArray.clear();
-    if (product.images && product.images.length > 0) {
-      product.images.forEach((imageUrl: string) => {
-        const imageControl = this.createImageControl();
-        imageControl.patchValue({ url: imageUrl, alt: product.imageAlt || '' });
-        this.imagesArray.push(imageControl);
-      });
-    } else if (product.image) {
-      const imageControl = this.createImageControl();
-      imageControl.patchValue({ url: product.image, alt: product.imageAlt || '' });
-      this.imagesArray.push(imageControl);
-    }
+  populateForm(product: IProduct): void {
+    // Convert images array to textarea format
+    const imagesText = product.images ? product.images.join('\n') : '';
+    
+    // Convert product details paragraphs to textarea format
+    const enParagraphsText = this.arrayToTextarea(product.product_details?.product_details_paragraphs?.en);
+    const arParagraphsText = this.arrayToTextarea(product.product_details?.product_details_paragraphs?.ar);
 
     // Populate form with product data
     this.productForm.patchValue({
-      name: name,
-      description: description,
+      name: product.name || '',
+      color: product.color || { en: '', ar: '' },
       price: {
+        currency: product.price?.currency || 'EGP',
         currentPrice: product.price?.currentPrice || 0,
-        currency: product.price?.currency || 'EGP'
+        discounted: product.price?.discounted || false
       },
-      stockQuantity: product.stockQuantity || 0,
-      inStock: product.inStock !== undefined ? product.inStock : true,
-      vendorId: product.vendorId || '',
-      vendorName: product.vendorName || '',
+      measurement: product.measurement || {
+        width: null,
+        height: null,
+        depth: null,
+        length: null,
+        unit: 'cm'
+      },
+      typeName: product.typeName || { en: '', ar: '' },
+      contextualImageUrl: product.contextualImageUrl || '',
+      images: imagesText,
+      short_description: product.short_description || { en: '', ar: '' },
+      product_details: {
+        product_details_paragraphs: {
+          en: enParagraphsText,
+          ar: arParagraphsText
+        },
+        expandable_sections: product.product_details?.expandable_sections || {
+          materials_and_care: { en: '', ar: '' },
+          details_certifications: { en: '', ar: '' },
+          good_to_know: { en: '', ar: '' },
+          safety_and_compliance: { en: '', ar: '' },
+          assembly_and_documents: { en: '', ar: '' }
+        }
+      },
+      vendorId: product.vendorId || this.currentUserId,
       categoryId: product.categoryId || '',
-      measurement: product.measurement || '',
-      unit: product.unit || 'piece'
+      inStock: product.inStock !== undefined ? product.inStock : true,
+      stockQuantity: product.stockQuantity || 0,
+      weight: product.weight || { value: null, unit: 'kg' },
+      fullUrl: product.fullUrl || ''
     });
 
     // Handle variants if they exist
@@ -302,6 +352,18 @@ export class ProductFormComponent implements OnInit {
         this.variantsArray.push(variantControl);
       });
     }
+
+    // Show optional sections if they have data
+    this.showMeasurementSection = !!(product.measurement && 
+      (product.measurement.width || product.measurement.height || 
+       product.measurement.depth || product.measurement.length));
+    
+    this.showWeightSection = !!(product.weight && product.weight.value);
+    
+    this.showProductDetailsSection = !!(product.product_details && 
+      (enParagraphsText || arParagraphsText || 
+       Object.values(product.product_details.expandable_sections || {}).some(section => 
+         section.en || section.ar)));
   }
 
   onSubmit(): void {
@@ -319,26 +381,77 @@ export class ProductFormComponent implements OnInit {
     }
   }
 
-  prepareFormData(): any {
+  prepareFormData(): Partial<IProduct> {
     const formValue = this.productForm.value;
     
-    // Extract image URLs from the form array
-    const images = formValue.images
-      .map((img: any) => img.url)
-      .filter((url: string) => url && url.trim() !== '');
+    // Convert images textarea to array
+    const images = this.textareaToArray(formValue.images);
     
-    return {
-      ...formValue,
+    // Convert product details paragraphs textarea to arrays
+    const productDetailsParagraphs = {
+      en: this.textareaToArray(formValue.product_details.product_details_paragraphs.en),
+      ar: this.textareaToArray(formValue.product_details.product_details_paragraphs.ar)
+    };
+
+    const productData: Partial<IProduct> = {
+      name: formValue.name,
+      color: formValue.color,
+      price: formValue.price,
+      typeName: formValue.typeName,
       images: images,
-      // Keep the primary image for backward compatibility
-      image: images[0] || '',
-      imageAlt: formValue.images[0]?.alt || '',
-      // Ensure variants is empty array if not used
+      short_description: formValue.short_description,
+      vendorId: formValue.vendorId,
+      categoryId: formValue.categoryId,
+      inStock: formValue.inStock,
+      stockQuantity: formValue.stockQuantity,
       variants: this.showVariantsSection ? formValue.variants : []
     };
+
+    // Add optional fields only if they have values
+    if (formValue.contextualImageUrl && formValue.contextualImageUrl.trim() !== '') {
+      productData.contextualImageUrl = formValue.contextualImageUrl;
+    }
+
+    if (this.showMeasurementSection) {
+      const measurement = formValue.measurement;
+      if (measurement.width || measurement.height || measurement.depth || measurement.length) {
+        productData.measurement = {
+          ...measurement,
+          // Remove null values
+          width: measurement.width || undefined,
+          height: measurement.height || undefined,
+          depth: measurement.depth || undefined,
+          length: measurement.length || undefined
+        };
+      }
+    }
+
+    if (this.showWeightSection && formValue.weight.value) {
+      productData.weight = formValue.weight;
+    }
+
+    if (this.showProductDetailsSection) {
+      const hasContent = productDetailsParagraphs.en.length > 0 || 
+                        productDetailsParagraphs.ar.length > 0 ||
+                        Object.values(formValue.product_details.expandable_sections).some((section: any) => 
+                          section.en || section.ar);
+      
+      if (hasContent) {
+        productData.product_details = {
+          product_details_paragraphs: productDetailsParagraphs,
+          expandable_sections: formValue.product_details.expandable_sections
+        };
+      }
+    }
+
+    if (formValue.fullUrl && formValue.fullUrl.trim() !== '') {
+      productData.fullUrl = formValue.fullUrl;
+    }
+
+    return productData;
   }
 
-  createProduct(productData: any): void {
+  createProduct(productData: Partial<IProduct>): void {
     // Note: You'll need to implement this method in your ProductsWithApiService
     console.log('Creating product:', productData);
     // this.productsService.createProduct(productData).subscribe({
@@ -360,7 +473,7 @@ export class ProductFormComponent implements OnInit {
     }, 1000);
   }
 
-  updateProduct(productData: any): void {
+  updateProduct(productData: Partial<IProduct>): void {
     // Note: You'll need to implement this method in your ProductsWithApiService
     console.log('Updating product:', productData);
     // this.productsService.updateProduct(this.productId!, productData).subscribe({
@@ -404,6 +517,7 @@ export class ProductFormComponent implements OnInit {
       if (control.errors['required']) return 'This field is required';
       if (control.errors['min']) return `Minimum value is ${control.errors['min'].min}`;
       if (control.errors['pattern']) return 'Invalid format';
+      if (control.errors['requireAtLeastOne']) return 'At least one measurement field is required';
     }
     return '';
   }
@@ -422,5 +536,17 @@ export class ProductFormComponent implements OnInit {
   isFieldInvalid(fieldPath: string): boolean {
     const control = this.getNestedControl(fieldPath);
     return !!(control?.invalid && control.touched);
+  }
+
+  // Helper method to get field values for template
+  getFieldValue(fieldPath: string): any {
+    const control = this.getNestedControl(fieldPath);
+    return control?.value;
+  }
+
+  // Helper method to check if measurement section has errors
+  isMeasurementSectionInvalid(): boolean {
+    const measurementControl = this.productForm.get('measurement');
+    return !!(measurementControl?.errors?.['requireAtLeastOne'] && measurementControl?.touched);
   }
 }

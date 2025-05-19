@@ -1,233 +1,687 @@
 <div class="product-form-container">
   <div class="form-header">
     <h2>{{ isEditMode ? 'Edit Product' : 'Add New Product' }}</h2>
-    <button type="button" class="btn btn-outline-secondary" (click)="onCancel()">
-      <i class="fas fa-arrow-left"></i> Back to Products
-    </button>
   </div>
 
   <form [formGroup]="productForm" (ngSubmit)="onSubmit()" class="product-form">
+    <!-- Loading Spinner -->
+    <div *ngIf="isLoading" class="loading-spinner">
+      <div class="spinner"></div>
+      <p>{{ isEditMode ? 'Loading product...' : 'Saving product...' }}</p>
+    </div>
+
     <!-- Basic Information Section -->
     <div class="form-section">
       <h3>Basic Information</h3>
-
-      <!-- Product Name (Localized) -->
-      <div class="form-group" formGroupName="name">
-        <div class="localized-field">
-          <div>
-            <label for="name-en">Product Name (English) *</label>
-            <input type="text" id="name-en" class="form-control" formControlName="en"
-              [class.is-invalid]="isFieldInvalid('name.en')" placeholder="Enter product name in English">
-            <div class="invalid-feedback">{{ getFieldError('name.en') }}</div>
-          </div>
-          <div>
-            <label for="name-ar">Product Name (Arabic)</label>
-            <input type="text" id="name-ar" class="form-control" formControlName="ar"
-              placeholder="Enter product name in Arabic" dir="rtl">
-          </div>
-        </div>
-      </div>
-
-      <!-- Product Description (Localized) -->
-      <div class="form-group" formGroupName="description">
-        <div class="localized-field">
-          <div>
-            <label for="description-en">Product Description (English) *</label>
-            <textarea id="description-en" class="form-control" formControlName="en"
-              [class.is-invalid]="isFieldInvalid('description.en')" rows="4"
-              placeholder="Enter product description in English"></textarea>
-            <div class="invalid-feedback">{{ getFieldError('description.en') }}</div>
-          </div>
-          <div>
-            <label for="description-ar">Product Description (Arabic)</label>
-            <textarea id="description-ar" class="form-control" formControlName="ar" rows="4"
-              placeholder="Enter product description in Arabic" dir="rtl"></textarea>
-          </div>
-        </div>
-      </div>
-
-      <!-- Category Selection -->
+      
+      <!-- Product Name -->
       <div class="form-group">
-        <label for="categoryId">Category *</label>
-        <select id="categoryId" class="form-control" formControlName="categoryId"
-          [class.is-invalid]="isFieldInvalid('categoryId')">
+        <label for="name">Product Name <span class="required">*</span></label>
+        <input
+          type="text"
+          id="name"
+          formControlName="name"
+          class="form-control"
+          [class.error]="isFieldInvalid('name')"
+          placeholder="Enter product name">
+        <div *ngIf="isFieldInvalid('name')" class="error-message">
+          {{ getFieldError('name') }}
+        </div>
+      </div>
+
+      <!-- Color -->
+      <div class="form-group">
+        <label>Color <span class="required">*</span></label>
+        <div formGroupName="color" class="bilingual-fields">
+          <div class="field-group">
+            <label for="color-en">English</label>
+            <input
+              type="text"
+              id="color-en"
+              formControlName="en"
+              class="form-control"
+              [class.error]="isFieldInvalid('color.en')"
+              placeholder="Color in English">
+            <div *ngIf="isFieldInvalid('color.en')" class="error-message">
+              {{ getFieldError('color.en') }}
+            </div>
+          </div>
+          <div class="field-group">
+            <label for="color-ar">Arabic</label>
+            <input
+              type="text"
+              id="color-ar"
+              formControlName="ar"
+              class="form-control"
+              [class.error]="isFieldInvalid('color.ar')"
+              placeholder="اللون بالعربية"
+              dir="rtl">
+            <div *ngIf="isFieldInvalid('color.ar')" class="error-message">
+              {{ getFieldError('color.ar') }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Type Name -->
+      <div class="form-group">
+        <label>Type Name <span class="required">*</span></label>
+        <div formGroupName="typeName" class="bilingual-fields">
+          <div class="field-group">
+            <label for="typeName-en">English</label>
+            <input
+              type="text"
+              id="typeName-en"
+              formControlName="en"
+              class="form-control"
+              [class.error]="isFieldInvalid('typeName.en')"
+              placeholder="Type name in English">
+            <div *ngIf="isFieldInvalid('typeName.en')" class="error-message">
+              {{ getFieldError('typeName.en') }}
+            </div>
+          </div>
+          <div class="field-group">
+            <label for="typeName-ar">Arabic</label>
+            <input
+              type="text"
+              id="typeName-ar"
+              formControlName="ar"
+              class="form-control"
+              [class.error]="isFieldInvalid('typeName.ar')"
+              placeholder="نوع المنتج بالعربية"
+              dir="rtl">
+            <div *ngIf="isFieldInvalid('typeName.ar')" class="error-message">
+              {{ getFieldError('typeName.ar') }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Short Description -->
+      <div class="form-group">
+        <label>Short Description <span class="required">*</span></label>
+        <div formGroupName="short_description" class="bilingual-fields">
+          <div class="field-group">
+            <label for="shortDesc-en">English</label>
+            <textarea
+              id="shortDesc-en"
+              formControlName="en"
+              class="form-control"
+              [class.error]="isFieldInvalid('short_description.en')"
+              placeholder="Short description in English"
+              rows="3"></textarea>
+            <div *ngIf="isFieldInvalid('short_description.en')" class="error-message">
+              {{ getFieldError('short_description.en') }}
+            </div>
+          </div>
+          <div class="field-group">
+            <label for="shortDesc-ar">Arabic</label>
+            <textarea
+              id="shortDesc-ar"
+              formControlName="ar"
+              class="form-control"
+              [class.error]="isFieldInvalid('short_description.ar')"
+              placeholder="وصف مختصر بالعربية"
+              dir="rtl"
+              rows="3"></textarea>
+            <div *ngIf="isFieldInvalid('short_description.ar')" class="error-message">
+              {{ getFieldError('short_description.ar') }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Category -->
+      <div class="form-group">
+        <label for="categoryId">Category <span class="required">*</span></label>
+        <select
+          id="categoryId"
+          formControlName="categoryId"
+          class="form-control"
+          [class.error]="isFieldInvalid('categoryId')">
           <option value="">Select a category</option>
           <option *ngFor="let category of categories" [value]="category._id">
             {{ category.name }}
           </option>
         </select>
-        <div class="invalid-feedback">{{ getFieldError('categoryId') }}</div>
+        <div *ngIf="isFieldInvalid('categoryId')" class="error-message">
+          {{ getFieldError('categoryId') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Price Section -->
+    <div class="form-section">
+      <h3>Pricing</h3>
+      <div formGroupName="price" class="price-fields">
+        <div class="form-group">
+          <label for="currency">Currency <span class="required">*</span></label>
+          <select
+            id="currency"
+            formControlName="currency"
+            class="form-control"
+            [class.error]="isFieldInvalid('price.currency')">
+            <option value="EGP">EGP</option>
+          </select>
+          <div *ngIf="isFieldInvalid('price.currency')" class="error-message">
+            {{ getFieldError('price.currency') }}
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="currentPrice">Current Price <span class="required">*</span></label>
+          <input
+            type="number"
+            id="currentPrice"
+            formControlName="currentPrice"
+            class="form-control"
+            [class.error]="isFieldInvalid('price.currentPrice')"
+            placeholder="0"
+            >
+          <div *ngIf="isFieldInvalid('price.currentPrice')" class="error-message">
+            {{ getFieldError('price.currentPrice') }}
+          </div>
+        </div>
+        <div class="form-group checkbox">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              formControlName="discounted">
+            Discounted
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stock Information -->
+    <div class="form-section">
+      <h3>Stock Information</h3>
+      <div class="stock-fields">
+        <div class="form-group checkbox">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              formControlName="inStock">
+            In Stock
+          </label>
+        </div>
+        <div class="form-group">
+          <label for="stockQuantity">Stock Quantity <span class="required">*</span></label>
+          <input
+            type="number"
+            id="stockQuantity"
+            formControlName="stockQuantity"
+            class="form-control"
+            [class.error]="isFieldInvalid('stockQuantity')"
+            placeholder="0"
+            min="0">
+          <div *ngIf="isFieldInvalid('stockQuantity')" class="error-message">
+            {{ getFieldError('stockQuantity') }}
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Images Section -->
     <div class="form-section">
-      <h3>Product Images</h3>
-
-      <div formArrayName="images" class="images-section">
-        <div *ngFor="let imageControl of imagesArray.controls; let i = index" [formGroupName]="i" class="image-item">
-          <div class="image-inputs">
-            <div class="form-group flex-1">
-              <label>Image URL {{ i + 1 }} *</label>
-              <input type="url" class="form-control" formControlName="url"
-                [class.is-invalid]="imageControl.get('url')?.invalid && imageControl.get('url')?.touched"
-                placeholder="https://example.com/image.jpg">
-              <div class="invalid-feedback"
-                *ngIf="imageControl.get('url')?.errors?.['required'] && imageControl.get('url')?.touched">
-                Image URL is required
-              </div>
-              <div class="invalid-feedback"
-                *ngIf="imageControl.get('url')?.errors?.['pattern'] && imageControl.get('url')?.touched">
-                Please enter a valid URL
-              </div>
-            </div>
-            <div class="form-group flex-1">
-              <label>Alt Text</label>
-              <input type="text" class="form-control" formControlName="alt" placeholder="Image description">
-            </div>
-            <button type="button" class="btn btn-outline-danger btn-sm remove-btn" (click)="removeImageField(i)"
-              [disabled]="imagesArray.length === 1">
-              <i class="fas fa-trash"></i>
-            </button>
-          </div>
-          <div class="image-preview" *ngIf="imageControl.get('url')?.value">
-            <img [src]="imageControl.get('url')?.value" [alt]="imageControl.get('alt')?.value"
-              (error)="($event.target as HTMLImageElement).style.display='none'"
-              (load)="($event.target as HTMLImageElement).style.display='block'">
-          </div>
-        </div>
-
-        <button type="button" class="btn btn-outline-primary" (click)="addImageField()">
-          <i class="fas fa-plus"></i> Add Another Image
-        </button>
-      </div>
-    </div>
-
-    <!-- Pricing & Inventory Section -->
-    <div class="form-section">
-      <h3>Pricing & Inventory</h3>
-
-      <div class="row" formGroupName="price">
-        <div class="col-md-6">
-          <label for="currentPrice">Price *</label>
-          <div class="input-group">
-            <input type="number" id="currentPrice" class="form-control" formControlName="currentPrice"
-              [class.is-invalid]="isFieldInvalid('price.currentPrice')" min="0" step="0.01" placeholder="0.00">
-            <span class="input-group-text">{{ productForm.get('price.currency')?.value || 'EGP' }}</span>
-          </div>
-          <div class="invalid-feedback">{{ getFieldError('price.currentPrice') }}</div>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-md-6">
-          <label for="stockQuantity">Stock Quantity *</label>
-          <input type="number" id="stockQuantity" class="form-control" formControlName="stockQuantity"
-            [class.is-invalid]="isFieldInvalid('stockQuantity')" min="0" placeholder="0">
-          <div class="invalid-feedback">{{ getFieldError('stockQuantity') }}</div>
-        </div>
-        <div class="col-md-6">
-          <label for="unit">Unit *</label>
-          <select id="unit" class="form-control" formControlName="unit" [class.is-invalid]="isFieldInvalid('unit')">
-            <option *ngFor="let unit of availableUnits" [value]="unit">{{ unit }}</option>
-          </select>
-          <div class="invalid-feedback">{{ getFieldError('unit') }}</div>
+      <h3>Images</h3>
+      <div class="form-group">
+        <label for="images">Product Images <span class="required">*</span></label>
+        <textarea
+          id="images"
+          formControlName="images"
+          class="form-control"
+          [class.error]="isFieldInvalid('images')"
+          placeholder="Enter image URLs, one per line"
+          rows="4"></textarea>
+        <small class="helper-text">Enter one image URL per line</small>
+        <div *ngIf="isFieldInvalid('images')" class="error-message">
+          {{ getFieldError('images') }}
         </div>
       </div>
 
       <div class="form-group">
-        <div class="form-check">
-          <input type="checkbox" id="inStock" class="form-check-input" formControlName="inStock">
-          <label class="form-check-label" for="inStock">
-            Product is in stock
-          </label>
+        <label for="contextualImageUrl">Contextual Image URL (Optional)</label>
+        <input
+          type="url"
+          id="contextualImageUrl"
+          formControlName="contextualImageUrl"
+          class="form-control"
+          [class.error]="isFieldInvalid('contextualImageUrl')"
+          placeholder="https://example.com/image.jpg">
+        <div *ngIf="isFieldInvalid('contextualImageUrl')" class="error-message">
+          {{ getFieldError('contextualImageUrl') }}
         </div>
       </div>
 
       <div class="form-group">
-        <label for="measurement">Measurement/Specifications</label>
-        <input type="text" id="measurement" class="form-control" formControlName="measurement"
-          placeholder="e.g., 500ml, Large, 10x15cm">
+        <label for="fullUrl">Full URL (Optional)</label>
+        <input
+          type="text"
+          id="fullUrl"
+          formControlName="fullUrl"
+          class="form-control"
+          placeholder="Enter full URL">
       </div>
     </div>
 
-    <!-- Vendor Information Section -->
+    <!-- Measurement Section (Optional) -->
     <div class="form-section">
-      <h3>Vendor Information</h3>
-
-      <div class="row">
-        <div class="col-md-6">
-          <label for="vendorId">Vendor ID *</label>
-          <input type="text" id="vendorId" class="form-control" formControlName="vendorId"
-            [class.is-invalid]="isFieldInvalid('vendorId')" placeholder="Enter vendor ID">
-          <div class="invalid-feedback">{{ getFieldError('vendorId') }}</div>
-        </div>
-        <div class="col-md-6">
-          <label for="vendorName">Vendor Name *</label>
-          <input type="text" id="vendorName" class="form-control" formControlName="vendorName"
-            [class.is-invalid]="isFieldInvalid('vendorName')" placeholder="Enter vendor name">
-          <div class="invalid-feedback">{{ getFieldError('vendorName') }}</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Variants Section (Expandable) -->
-    <div class="form-section">
-      <div class="section-header">
-        <h3>Product Variants</h3>
-        <button type="button" class="btn btn-outline-info btn-sm" (click)="toggleVariantsSection()">
-          {{ showVariantsSection ? 'Hide' : 'Show' }} Variants
-          <i class="fas" [class.fa-chevron-down]="!showVariantsSection" [class.fa-chevron-up]="showVariantsSection"></i>
+      <div class="section-toggle">
+        <button
+          type="button"
+          class="toggle-btn"
+          (click)="toggleMeasurementSection()">
+          <span class="toggle-icon" [class.expanded]="showMeasurementSection">▼</span>
+          Measurements (Optional)
         </button>
       </div>
-
-      <div *ngIf="showVariantsSection" formArrayName="variants" class="variants-section">
-        <div *ngIf="variantsArray.length === 0" class="empty-variants">
-          <p>No variants added yet. Click "Add Variant" to create product variations.</p>
+      
+      <div *ngIf="showMeasurementSection" class="collapsible-content" formGroupName="measurement">
+        <div class="measurement-fields">
+          <div class="form-group">
+            <label for="width">Width</label>
+            <input
+              type="number"
+              id="width"
+              formControlName="width"
+              class="form-control"
+              placeholder="0"
+              min="0"
+              step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="height">Height</label>
+            <input
+              type="number"
+              id="height"
+              formControlName="height"
+              class="form-control"
+              placeholder="0"
+              min="0"
+              step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="depth">Depth</label>
+            <input
+              type="number"
+              id="depth"
+              formControlName="depth"
+              class="form-control"
+              placeholder="0"
+              min="0"
+              step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="length">Length</label>
+            <input
+              type="number"
+              id="length"
+              formControlName="length"
+              class="form-control"
+              placeholder="0"
+              min="0"
+              step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="measurement-unit">Unit <span class="required">*</span></label>
+            <select
+              id="measurement-unit"
+              formControlName="unit"
+              class="form-control">
+              <option *ngFor="let unit of measurementUnits" [value]="unit">
+                {{ unit }}
+              </option>
+            </select>
+          </div>
         </div>
+        <div *ngIf="isMeasurementSectionInvalid()" class="error-message">
+          At least one measurement field is required when this section is enabled
+        </div>
+      </div>
+    </div>
 
-        <div *ngFor="let variantControl of variantsArray.controls; let i = index" [formGroupName]="i"
-          class="variant-item">
-          <h4>Variant {{ i + 1 }}</h4>
-          <div class="variant-fields">
-            <div class="form-group">
-              <label>Variant Name *</label>
-              <input type="text" class="form-control" formControlName="name" placeholder="e.g., Size, Color, Material">
+    <!-- Weight Section (Optional) -->
+    <div class="form-section">
+      <div class="section-toggle">
+        <button
+          type="button"
+          class="toggle-btn"
+          (click)="toggleWeightSection()">
+          <span class="toggle-icon" [class.expanded]="showWeightSection">▼</span>
+          Weight (Optional)
+        </button>
+      </div>
+      
+      <div *ngIf="showWeightSection" class="collapsible-content" formGroupName="weight">
+        <div class="weight-fields">
+          <div class="form-group">
+            <label for="weight-value">Weight Value</label>
+            <input
+              type="number"
+              id="weight-value"
+              formControlName="value"
+              class="form-control"
+              placeholder="0"
+              min="0"
+              step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="weight-unit">Unit</label>
+            <select
+              id="weight-unit"
+              formControlName="unit"
+              class="form-control">
+              <option *ngFor="let unit of weightUnits" [value]="unit">
+                {{ unit }}
+              </option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Product Details Section (Optional) -->
+    <div class="form-section">
+      <div class="section-toggle">
+        <button
+          type="button"
+          class="toggle-btn"
+          (click)="toggleProductDetailsSection()">
+          <span class="toggle-icon" [class.expanded]="showProductDetailsSection">▼</span>
+          Product Details (Optional)
+        </button>
+      </div>
+      
+      <div *ngIf="showProductDetailsSection" class="collapsible-content" formGroupName="product_details">
+        <!-- Product Details Paragraphs -->
+        <div class="form-group">
+          <label>Product Details Paragraphs</label>
+          <div formGroupName="product_details_paragraphs" class="bilingual-fields">
+            <div class="field-group">
+              <label for="details-paragraphs-en">English</label>
+              <textarea
+                id="details-paragraphs-en"
+                formControlName="en"
+                class="form-control"
+                placeholder="Enter paragraphs, one per line"
+                rows="4"></textarea>
+              <small class="helper-text">Enter one paragraph per line</small>
             </div>
-            <div class="form-group">
-              <label>Variant Value *</label>
-              <input type="text" class="form-control" formControlName="value" placeholder="e.g., Large, Red, Cotton">
+            <div class="field-group">
+              <label for="details-paragraphs-ar">Arabic</label>
+              <textarea
+                id="details-paragraphs-ar"
+                formControlName="ar"
+                class="form-control"
+                placeholder="أدخل الفقرات، واحدة في كل سطر"
+                dir="rtl"
+                rows="4"></textarea>
+              <small class="helper-text" dir="rtl">أدخل فقرة واحدة في كل سطر</small>
             </div>
-            <div class="form-group">
-              <label>Price Override</label>
-              <input type="number" class="form-control" formControlName="price" min="0" step="0.01"
-                placeholder="Leave empty to use base price">
-            </div>
-            <div class="form-group">
-              <label>Stock Override</label>
-              <input type="number" class="form-control" formControlName="stockQuantity" min="0"
-                placeholder="Leave empty to use base stock">
-            </div>
-            <button type="button" class="btn btn-outline-danger btn-sm" (click)="removeVariant(i)">
-              <i class="fas fa-trash"></i> Remove Variant
-            </button>
           </div>
         </div>
 
-        <button type="button" class="btn btn-outline-success" (click)="addVariant()">
-          <i class="fas fa-plus"></i> Add Variant
+        <!-- Expandable Sections -->
+        <div formGroupName="expandable_sections" class="expandable-sections">
+          <h4>Expandable Sections</h4>
+          
+          <!-- Materials and Care -->
+          <div formGroupName="materials_and_care" class="form-group">
+            <label>Materials and Care</label>
+            <div class="bilingual-fields">
+              <div class="field-group">
+                <label for="materials-en">English</label>
+                <textarea
+                  id="materials-en"
+                  formControlName="en"
+                  class="form-control"
+                  placeholder="Materials and care instructions in English"
+                  rows="3"></textarea>
+              </div>
+              <div class="field-group">
+                <label for="materials-ar">Arabic</label>
+                <textarea
+                  id="materials-ar"
+                  formControlName="ar"
+                  class="form-control"
+                  placeholder="المواد وتعليمات العناية بالعربية"
+                  dir="rtl"
+                  rows="3"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Details and Certifications -->
+          <div formGroupName="details_certifications" class="form-group">
+            <label>Details & Certifications</label>
+            <div class="bilingual-fields">
+              <div class="field-group">
+                <label for="certifications-en">English</label>
+                <textarea
+                  id="certifications-en"
+                  formControlName="en"
+                  class="form-control"
+                  placeholder="Details and certifications in English"
+                  rows="3"></textarea>
+              </div>
+              <div class="field-group">
+                <label for="certifications-ar">Arabic</label>
+                <textarea
+                  id="certifications-ar"
+                  formControlName="ar"
+                  class="form-control"
+                  placeholder="التفاصيل والشهادات بالعربية"
+                  dir="rtl"
+                  rows="3"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Good to Know -->
+          <div formGroupName="good_to_know" class="form-group">
+            <label>Good to Know</label>
+            <div class="bilingual-fields">
+              <div class="field-group">
+                <label for="goodToKnow-en">English</label>
+                <textarea
+                  id="goodToKnow-en"
+                  formControlName="en"
+                  class="form-control"
+                  placeholder="Good to know information in English"
+                  rows="3"></textarea>
+              </div>
+              <div class="field-group">
+                <label for="goodToKnow-ar">Arabic</label>
+                <textarea
+                  id="goodToKnow-ar"
+                  formControlName="ar"
+                  class="form-control"
+                  placeholder="معلومات مفيدة بالعربية"
+                  dir="rtl"
+                  rows="3"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Safety and Compliance -->
+          <div formGroupName="safety_and_compliance" class="form-group">
+            <label>Safety & Compliance</label>
+            <div class="bilingual-fields">
+              <div class="field-group">
+                <label for="safety-en">English</label>
+                <textarea
+                  id="safety-en"
+                  formControlName="en"
+                  class="form-control"
+                  placeholder="Safety and compliance information in English"
+                  rows="3"></textarea>
+              </div>
+              <div class="field-group">
+                <label for="safety-ar">Arabic</label>
+                <textarea
+                  id="safety-ar"
+                  formControlName="ar"
+                  class="form-control"
+                  placeholder="معلومات السلامة والامتثال بالعربية"
+                  dir="rtl"
+                  rows="3"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Assembly and Documents -->
+          <div formGroupName="assembly_and_documents" class="form-group">
+            <label>Assembly & Documents</label>
+            <div class="bilingual-fields">
+              <div class="field-group">
+                <label for="assembly-en">English</label>
+                <textarea
+                  id="assembly-en"
+                  formControlName="en"
+                  class="form-control"
+                  placeholder="Assembly and documents information in English"
+                  rows="3"></textarea>
+              </div>
+              <div class="field-group">
+                <label for="assembly-ar">Arabic</label>
+                <textarea
+                  id="assembly-ar"
+                  formControlName="ar"
+                  class="form-control"
+                  placeholder="معلومات التجميع والوثائق بالعربية"
+                  dir="rtl"
+                  rows="3"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Variants Section (Optional) -->
+    <div class="form-section">
+      <div class="section-toggle">
+        <button
+          type="button"
+          class="toggle-btn"
+          (click)="toggleVariantsSection()">
+          <span class="toggle-icon" [class.expanded]="showVariantsSection">▼</span>
+          Product Variants (Optional)
         </button>
+      </div>
+      
+      <div *ngIf="showVariantsSection" class="collapsible-content">
+        <div class="variants-section">
+          <button
+            type="button"
+            class="add-variant-btn"
+            (click)="addVariant()">
+            + Add Variant
+          </button>
+          
+          <div formArrayName="variants" class="variants-list">
+            <div
+              *ngFor="let variant of getVariantControls(); let i = index"
+              [formGroupName]="i"
+              class="variant-item">
+              <div class="variant-header">
+                <h5>Variant {{ i + 1 }}</h5>
+                <button
+                  type="button"
+                  class="remove-variant-btn"
+                  (click)="removeVariant(i)">
+                  × Remove
+                </button>
+              </div>
+              
+              <div class="variant-fields">
+                <div class="form-group">
+                  <label [for]="'variant-name-' + i">Variant Name <span class="required">*</span></label>
+                  <input
+                    type="text"
+                    [id]="'variant-name-' + i"
+                    formControlName="name"
+                    class="form-control"
+                    [class.error]="isVariantFieldInvalid(i, 'name')"
+                    placeholder="e.g., Size, Color">
+                  <div *ngIf="isVariantFieldInvalid(i, 'name')" class="error-message">
+                    {{ getVariantFieldError(i, 'name') }}
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label [for]="'variant-value-' + i">Variant Value <span class="required">*</span></label>
+                  <input
+                    type="text"
+                    [id]="'variant-value-' + i"
+                    formControlName="value"
+                    class="form-control"
+                    [class.error]="isVariantFieldInvalid(i, 'value')"
+                    placeholder="e.g., Large, Red">
+                  <div *ngIf="isVariantFieldInvalid(i, 'value')" class="error-message">
+                    {{ getVariantFieldError(i, 'value') }}
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label [for]="'variant-price-' + i">Additional Price</label>
+                  <input
+                    type="number"
+                    [id]="'variant-price-' + i"
+                    formControlName="price"
+                    class="form-control"
+                    [class.error]="isVariantFieldInvalid(i, 'price')"
+                    placeholder="0.00"
+                    min="0"
+                    step="0.01">
+                  <div *ngIf="isVariantFieldInvalid(i, 'price')" class="error-message">
+                    {{ getVariantFieldError(i, 'price') }}
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label [for]="'variant-stock-' + i">Stock Quantity</label>
+                  <input
+                    type="number"
+                    [id]="'variant-stock-' + i"
+                    formControlName="stockQuantity"
+                    class="form-control"
+                    [class.error]="isVariantFieldInvalid(i, 'stockQuantity')"
+                    placeholder="0"
+                    min="0">
+                  <div *ngIf="isVariantFieldInvalid(i, 'stockQuantity')" class="error-message">
+                    {{ getVariantFieldError(i, 'stockQuantity') }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div *ngIf="variantsArray.length === 0" class="no-variants">
+            No variants added yet. Click "Add Variant" to create one.
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Form Actions -->
     <div class="form-actions">
-      <button type="button" class="btn btn-secondary" (click)="onCancel()" [disabled]="isLoading">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="onCancel()">
         Cancel
       </button>
-      <button type="submit" class="btn btn-primary" [disabled]="isLoading || productForm.invalid">
-        <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
-        {{ isEditMode ? 'Update Product' : 'Create Product' }}
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="productForm.invalid || isLoading">
+        <span *ngIf="isLoading" class="loading-text">
+          {{ isEditMode ? 'Updating...' : 'Creating...' }}
+        </span>
+        <span *ngIf="!isLoading">
+          {{ isEditMode ? 'Update Product' : 'Create Product' }}
+        </span>
       </button>
     </div>
   </form>

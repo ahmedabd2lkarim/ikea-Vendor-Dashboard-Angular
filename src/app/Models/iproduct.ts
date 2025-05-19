@@ -68,8 +68,7 @@ export interface IProduct {
   variants: IVariant[];
   inStock: boolean;
   stockQuantity: number;
-  createdAt?: Date;
-  updatedAt?: Date;
+ 
   fullUrl?: string;
   weight?: {
     value?: number;
