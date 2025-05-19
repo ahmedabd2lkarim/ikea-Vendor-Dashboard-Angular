@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, catchError } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { IProduct } from '../Models/iproduct';
 import { Icategory } from '../Models/icategory';
@@ -14,7 +14,6 @@ export class ProductsWithApiService {
 
   constructor(private http: HttpClient) {}
 
-  // Product Management
   getAllProducts(): Observable<IProduct[]> {
     return this.http.get<IProduct[]>(`${this.baseURL}/products/vendor`);
   }
@@ -24,14 +23,43 @@ export class ProductsWithApiService {
   }
 
   createProduct(product: Partial<IProduct>): Observable<IProduct> {
-    return this.http.post<IProduct>(`${this.baseURL}/products/vendor`, product);
+    const productData = {
+      ...product,
+      variants: product.variants?.map((variant) => {
+        const { _id, ...variantData } = variant;
+        return variantData;
+      }),
+    };
+    return this.http.post<IProduct>(
+      `${this.baseURL}/products/vendor`,
+      productData
+    );
   }
 
   updateProduct(id: string, product: Partial<IProduct>): Observable<IProduct> {
-    return this.http.patch<IProduct>(
-      `${this.baseURL}/products/vendor/${id}`,
-      product
-    );
+    // Clean up variant data before sending
+    const productData = {
+      ...product,
+      variants: product.variants?.map((variant) => {
+        if (variant._id) {
+          return variant;
+        }
+        const { _id, ...newVariantData } = variant;
+        return newVariantData;
+      }),
+    };
+
+    return this.http
+      .patch<IProduct>(
+        `${this.baseURL}/products/vendor/${id}`,
+        productData
+      )
+      .pipe(
+        catchError((error) => {
+          console.error('API Error:', error);
+          throw error;
+        })
+      );
   }
 
   deleteProduct(id: string): Observable<void> {

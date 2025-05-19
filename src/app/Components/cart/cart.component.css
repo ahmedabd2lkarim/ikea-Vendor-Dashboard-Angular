@@ -1,0 +1,65 @@
+.status {
+  padding: 10px 15px;
+  border-radius: 20px;
+}
+.status.processing {
+  background-color: rgb(220, 220, 255);
+  color: blue;
+}
+.status.pending {
+  background-color: rgb(246, 233, 209);
+  color: orange;
+}
+.status.cancelled {
+  background-color: rgb(251, 225, 225);
+  color: red;
+}
+.status.shipped {
+  background-color: rgb(233, 250, 243);
+  color: rgb(105, 220, 175);
+}
+.status.delivered {
+  background-color: rgb(198, 247, 198);
+  color: darkgreen;
+}
+
+.demo-table {
+  width: 100%;
+  vertical-align: middle;
+}
+.demo-table th {
+  color: rgb(173, 172, 172);
+  border-bottom: 0px;
+  background-color: rgb(242, 240, 240);
+}
+.demo-table td {
+  padding: 16px;
+}
+
+.mat-mdc-row .mat-mdc-cell {
+  border-bottom: 5px solid rgb(242, 240, 240);
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+@media (max-width: 768px) {
+  .demo-table th {
+    font-size: 10px;
+  }
+  .demo-table td {
+    font-size: 10px;
+  }
+  .status {
+    padding: 5px;
+  }
+  .btn {
+    font-size: 12px;
+    padding: 5px;
+  }
+}
+.container {
+  background-color: white;
+  border-radius: 10px;
+}/*# sourceMappingURL=cart.component.css.map */

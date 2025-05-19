@@ -142,23 +142,17 @@ import { AuthService } from '../../../Services/auth.service';
               id="mobileNumber"
               formControlName="mobileNumber"
               class="form-control"
-              placeholder="Enter your mobile number"
+              [class.is-invalid]="
+                hasError('mobileNumber', 'required') ||
+                hasError('mobileNumber', 'pattern')
+              "
+              placeholder="Enter your mobile number (11 digits)"
             />
             <div
-              *ngIf="
-                registerForm.get('mobileNumber')?.touched &&
-                registerForm.get('mobileNumber')?.invalid
-              "
               class="error-message"
+              *ngIf="registerForm.get('mobileNumber')?.touched"
             >
-              <span
-                *ngIf="registerForm.get('mobileNumber')?.errors?.['required']"
-                >Mobile number is required</span
-              >
-              <span
-                *ngIf="registerForm.get('mobileNumber')?.errors?.['pattern']"
-                >Please enter a valid mobile number</span
-              >
+              {{ getErrorMessage('mobileNumber') }}
             </div>
           </div>
 
@@ -265,11 +259,28 @@ import { AuthService } from '../../../Services/auth.service';
       .login-link a:hover {
         text-decoration: underline;
       }
+
+      .is-invalid {
+        border-color: #dc3545;
+        padding-right: calc(1.5em + 0.75rem);
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(0.375em + 0.1875rem) center;
+        background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+      }
+
+      .error-message {
+        display: block;
+        width: 100%;
+        margin-top: 0.25rem;
+        font-size: 0.875em;
+        color: #dc3545;
+      }
     `,
   ],
 })
 export class RegisterComponent {
-  registerForm: FormGroup;
+  registerForm!: FormGroup;
   isLoading = false;
 
   constructor(
@@ -277,32 +288,106 @@ export class RegisterComponent {
     private authService: AuthService,
     private router: Router
   ) {
+    this.initForm();
+  }
+
+  private initForm() {
     this.registerForm = this.fb.group({
-      name: ['', Validators.required],
+      name: ['', [Validators.required, Validators.minLength(3)]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
-      storeName: ['', Validators.required],
+      storeName: ['', [Validators.required, Validators.minLength(3)]],
       storeAddress: ['', Validators.required],
       mobileNumber: [
         '',
-        [Validators.required, Validators.pattern('^[0-9]{10}$')],
+        [
+          Validators.required,
+          Validators.pattern('^01[0-2|5]{1}[0-9]{8}$') // More precise Egyptian number pattern
+        ],
       ],
+      role: ['vendor'],
     });
   }
 
-  onSubmit() {
-    if (this.registerForm.valid) {
-      this.isLoading = true;
+  // Helper methods for form validation
+  hasError(controlName: string, errorType: string): boolean {
+    const control = this.registerForm?.get(controlName);
+    if (!control) return false;
 
-      this.authService.register(this.registerForm.value).subscribe({
-        next: () => {
-          this.router.navigate(['/dashboard']);
-        },
-        error: (error) => {
-          console.error('Registration failed:', error);
-          this.isLoading = false;
-        },
-      });
+    if (controlName === 'mobileNumber') {
+      const value = control.value;
+      if (errorType === 'pattern') {
+        // Check specific mobile number format issues
+        if (!value) return false;
+        if (value.length !== 11) return true;
+        if (!value.startsWith('01')) return true;
+        // Check if it's a valid Egyptian prefix (010, 011, 012, 015)
+        const prefix = value.substring(0, 3);
+        if (!['010', '011', '012', '015'].includes(prefix)) return true;
+      }
     }
+
+    return control.touched && control.errors?.[errorType] === true;
+  }
+
+  getErrorMessage(controlName: string): string {
+    const control = this.registerForm?.get(controlName);
+    if (!control?.errors) return '';
+
+    if (controlName === 'mobileNumber') {
+      const value = control.value;
+      if (!value) return 'Mobile number is required';
+      if (value && !value.startsWith('01')) return 'Must start with 01';
+      if (value && value.length !== 11) return 'Must be 11 digits';
+      if (value) {
+        const prefix = value.substring(0, 3);
+        if (!['010', '011', '012', '015'].includes(prefix)) {
+          return 'Must start with 010, 011, 012, or 015';
+        }
+      }
+    }
+
+    const errors: Record<string, string> = {
+      required: 'This field is required',
+      pattern: 'Please enter a valid Egyptian mobile number (e.g., 01012345678)',
+    };
+
+    const firstError = Object.keys(control.errors)[0];
+    return errors[firstError] || 'Invalid input';
+  }
+
+  onSubmit() {
+    if (this.registerForm.invalid) {
+      Object.keys(this.registerForm.controls).forEach((key) => {
+        const control = this.registerForm.get(key);
+        if (control?.invalid) {
+          control.markAsTouched();
+        }
+      });
+      return;
+    }
+
+    this.isLoading = true;
+    const formData = {
+      ...this.registerForm.value,
+      role: 'vendor', // Ensure role is set even if form field is missing
+    };
+
+    this.authService.register(formData).subscribe({
+      next: () => {
+        this.router.navigate(['/dashboard']);
+      },
+      error: (error) => {
+        console.error('Registration failed:', error);
+        const errorMessage =
+          error.error?.message ||
+          'Registration failed. Please try again.';
+        // Add error display logic here (e.g., using MatSnackBar)
+        this.isLoading = false;
+      },
+      complete: () => {
+        this.isLoading = false;
+      },
+    });
   }
 }

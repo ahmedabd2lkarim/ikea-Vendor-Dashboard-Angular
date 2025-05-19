@@ -1,5 +1,12 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, AbstractControl } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  FormArray,
+  Validators,
+  ReactiveFormsModule,
+  AbstractControl,
+} from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Icategory } from '../../../Models/icategory';
@@ -7,23 +14,26 @@ import { ProductsWithApiService } from '../../../Services/products-with-api.serv
 import { IProduct } from '../../../Models/iproduct';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { VariantManagementComponent } from '../../variants/variant-management.component';
+import { IVariant } from '../../../Models/ivariant';
 
-export type ProductFormData = IProduct; 
+export type ProductFormData = IProduct;
 
 @Component({
   selector: 'app-product-form',
   standalone: true,
   imports: [
-    ReactiveFormsModule, 
+    ReactiveFormsModule,
     CommonModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    VariantManagementComponent,
   ],
   templateUrl: './product-form.component.html',
-  styleUrls: ['./product-form.component.scss']
+  styleUrls: ['./product-form.component.scss'],
 })
 export class ProductFormComponent implements OnInit {
   @Input() isEditMode: boolean = false;
-  @Input() productId: string | null = null;
+  productId: string | null = null;
 
   productForm!: FormGroup;
   categories: Icategory[] = [];
@@ -35,7 +45,8 @@ export class ProductFormComponent implements OnInit {
   showWeightSection = false;
   showProductDetailsSection = false;
   currentUserId = ''; // This should come from auth service
-  
+  variants: any[] = []; // Add this line
+
   constructor(
     private fb: FormBuilder,
     private productsService: ProductsWithApiService,
@@ -44,17 +55,23 @@ export class ProductFormComponent implements OnInit {
     private snackBar: MatSnackBar
   ) {}
 
+  // Getter for variants FormArray
+  get variantsArray() {
+    return this.productForm.get('variants') as FormArray;
+  }
+
   ngOnInit(): void {
     this.initializeForm();
     this.loadCategories();
     this.loadCurrentUser();
-    
-    // Check if we're in edit mode
-    this.route.params.subscribe(params => {
-      if (params['id']) {
-        this.productId = params['id'];
+
+    // Subscribe to route params
+    this.route.paramMap.subscribe((params) => {
+      const id = params.get('id');
+      if (id) {
+        this.productId = id;
         this.isEditMode = true;
-        this.loadProductForEdit();
+        this.loadProductForEdit(id);
       }
     });
   }
@@ -64,57 +81,57 @@ export class ProductFormComponent implements OnInit {
       name: ['', Validators.required],
       color: this.fb.group({
         en: ['', Validators.required],
-        ar: ['', Validators.required]
+        ar: ['', Validators.required],
       }),
       price: this.fb.group({
         currency: ['EGP', Validators.required],
         currentPrice: [0, [Validators.required, Validators.min(0.01)]],
-        discounted: [false]
+        discounted: [false],
       }),
       measurement: this.fb.group({
         width: [null],
         height: [null],
         depth: [null],
         length: [null],
-        unit: ['cm', Validators.required]
+        unit: ['cm', Validators.required],
       }),
       typeName: this.fb.group({
         en: ['', Validators.required],
-        ar: ['', Validators.required]
+        ar: ['', Validators.required],
       }),
       contextualImageUrl: ['', Validators.pattern(/https?:\/\/.+/)],
       images: ['', Validators.required], // Textarea for multiple URLs
       short_description: this.fb.group({
         en: ['', Validators.required],
-        ar: ['', Validators.required]
+        ar: ['', Validators.required],
       }),
       product_details: this.fb.group({
         product_details_paragraphs: this.fb.group({
           en: [''], // Textarea for multiple paragraphs
-          ar: ['']  // Textarea for multiple paragraphs
+          ar: [''], // Textarea for multiple paragraphs
         }),
         expandable_sections: this.fb.group({
           materials_and_care: this.fb.group({
             en: [''],
-            ar: ['']
+            ar: [''],
           }),
           details_certifications: this.fb.group({
             en: [''],
-            ar: ['']
+            ar: [''],
           }),
           good_to_know: this.fb.group({
             en: [''],
-            ar: ['']
+            ar: [''],
           }),
           safety_and_compliance: this.fb.group({
             en: [''],
-            ar: ['']
+            ar: [''],
           }),
           assembly_and_documents: this.fb.group({
             en: [''],
-            ar: ['']
-          })
-        })
+            ar: [''],
+          }),
+        }),
       }),
       vendorId: [this.currentUserId, Validators.required],
       categoryId: ['', Validators.required],
@@ -125,17 +142,19 @@ export class ProductFormComponent implements OnInit {
       stockQuantity: [0, [Validators.required, Validators.min(0)]],
       weight: this.fb.group({
         value: [null],
-        unit: ['kg']
+        unit: ['kg'],
       }),
-      fullUrl: ['']
+      fullUrl: [''],
     });
 
     // Add custom validator for measurement (at least one field required)
-    this.productForm.get('measurement')?.setValidators(this.measurementValidator);
+    this.productForm
+      .get('measurement')
+      ?.setValidators(this.measurementValidator);
 
     // Update category name when category changes
-    this.productForm.get('categoryId')?.valueChanges.subscribe(categoryId => {
-      const category = this.categories.find(cat => cat._id === categoryId);
+    this.productForm.get('categoryId')?.valueChanges.subscribe((categoryId) => {
+      const category = this.categories.find((cat) => cat._id === categoryId);
       if (category) {
         // Assuming category has a name property
         this.productForm.patchValue({ categoryName: category.name });
@@ -146,12 +165,12 @@ export class ProductFormComponent implements OnInit {
   // Custom validator for measurement - at least one field must be filled
   measurementValidator = (group: AbstractControl) => {
     if (!this.showMeasurementSection) return null;
-    
+
     const width = group.get('width')?.value;
     const height = group.get('height')?.value;
     const depth = group.get('depth')?.value;
     const length = group.get('length')?.value;
-    
+
     if (!width && !height && !depth && !length) {
       return { requireAtLeastOne: true };
     }
@@ -165,43 +184,15 @@ export class ProductFormComponent implements OnInit {
     //   this.currentUserId = user.id;
     //   this.productForm.patchValue({ vendorId: this.currentUserId });
     // });
-    
+
     // Temporary placeholder
     this.currentUserId = 'temp-vendor-id';
     this.productForm.patchValue({ vendorId: this.currentUserId });
   }
 
-  // Variants FormArray methods
-  get variantsArray(): FormArray {
-    return this.productForm.get('variants') as FormArray;
-  }
-
-  getVariantControls(): FormGroup[] {
-    return this.variantsArray.controls as FormGroup[];
-  }
-
-  createVariantControl(): FormGroup {
-    return this.fb.group({
-      name: ['', Validators.required],
-      value: ['', Validators.required],
-      price: [null, Validators.min(0)],
-      stockQuantity: [null, Validators.min(0)]
-    });
-  }
-
-  addVariant(): void {
-    this.variantsArray.push(this.createVariantControl());
-  }
-
-  removeVariant(index: number): void {
-    this.variantsArray.removeAt(index);
-  }
-
   toggleVariantsSection(): void {
     this.showVariantsSection = !this.showVariantsSection;
-    if (!this.showVariantsSection) {
-      this.variantsArray.clear();
-    }
+    // No need to clear variants array as it's managed by the variant component
   }
 
   toggleMeasurementSection(): void {
@@ -212,7 +203,7 @@ export class ProductFormComponent implements OnInit {
         height: null,
         depth: null,
         length: null,
-        unit: 'cm'
+        unit: 'cm',
       });
     }
     // Update validator when section is toggled
@@ -224,7 +215,7 @@ export class ProductFormComponent implements OnInit {
     if (!this.showWeightSection) {
       this.productForm.get('weight')?.reset({
         value: null,
-        unit: 'kg'
+        unit: 'kg',
       });
     }
   }
@@ -239,8 +230,8 @@ export class ProductFormComponent implements OnInit {
           details_certifications: { en: '', ar: '' },
           good_to_know: { en: '', ar: '' },
           safety_and_compliance: { en: '', ar: '' },
-          assembly_and_documents: { en: '', ar: '' }
-        }
+          assembly_and_documents: { en: '', ar: '' },
+        },
       });
     }
   }
@@ -255,7 +246,8 @@ export class ProductFormComponent implements OnInit {
     const control = this.variantsArray.at(index)?.get(fieldName);
     if (control?.errors && control.touched) {
       if (control.errors['required']) return 'This field is required';
-      if (control.errors['min']) return `Minimum value is ${control.errors['min'].min}`;
+      if (control.errors['min'])
+        return `Minimum value is ${control.errors['min'].min}`;
     }
     return '';
   }
@@ -263,9 +255,10 @@ export class ProductFormComponent implements OnInit {
   // Helper method to convert textarea to array
   private textareaToArray(text: string): string[] {
     if (!text || text.trim() === '') return [];
-    return text.split('\n')
-      .map(line => line.trim())
-      .filter(line => line !== '');
+    return text
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line !== '');
   }
 
   // Helper method to convert array to textarea
@@ -281,33 +274,48 @@ export class ProductFormComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading categories:', error);
-      }
+      },
     });
   }
 
-  loadProductForEdit(): void {
-    if (!this.productId) return;
-
+  loadProductForEdit(id: string): void {
     this.isLoading = true;
-    this.productsService.getProductById(this.productId).subscribe({
+    this.productsService.getProductById(id).subscribe({
       next: (product) => {
+        console.log('Loaded product:', product);
         this.populateForm(product);
+        // Set variants if they exist
+        if (product.variants) {
+          this.variants = product.variants;
+        }
         this.isLoading = false;
+        this.snackBar.open('Product loaded successfully', 'Close', {
+          duration: 3000,
+          panelClass: ['success-snackbar'],
+        });
       },
       error: (error) => {
         console.error('Error loading product:', error);
         this.isLoading = false;
-      }
+        this.snackBar.open('Failed to load product', 'Close', {
+          duration: 3000,
+          panelClass: ['error-snackbar'],
+        });
+      },
     });
   }
 
   populateForm(product: IProduct): void {
     // Convert images array to textarea format
     const imagesText = product.images ? product.images.join('\n') : '';
-    
+
     // Convert product details paragraphs to textarea format
-    const enParagraphsText = this.arrayToTextarea(product.product_details?.product_details_paragraphs?.en);
-    const arParagraphsText = this.arrayToTextarea(product.product_details?.product_details_paragraphs?.ar);
+    const enParagraphsText = this.arrayToTextarea(
+      product.product_details?.product_details_paragraphs?.en
+    );
+    const arParagraphsText = this.arrayToTextarea(
+      product.product_details?.product_details_paragraphs?.ar
+    );
 
     // Populate form with product data
     this.productForm.patchValue({
@@ -316,14 +324,14 @@ export class ProductFormComponent implements OnInit {
       price: {
         currency: product.price?.currency || 'EGP',
         currentPrice: product.price?.currentPrice || 0,
-        discounted: product.price?.discounted || false
+        discounted: product.price?.discounted || false,
       },
       measurement: product.measurement || {
         width: null,
         height: null,
         depth: null,
         length: null,
-        unit: 'cm'
+        unit: 'cm',
       },
       typeName: product.typeName || { en: '', ar: '' },
       contextualImageUrl: product.contextualImageUrl || '',
@@ -332,22 +340,22 @@ export class ProductFormComponent implements OnInit {
       product_details: {
         product_details_paragraphs: {
           en: enParagraphsText,
-          ar: arParagraphsText
+          ar: arParagraphsText,
         },
         expandable_sections: product.product_details?.expandable_sections || {
           materials_and_care: { en: '', ar: '' },
           details_certifications: { en: '', ar: '' },
           good_to_know: { en: '', ar: '' },
           safety_and_compliance: { en: '', ar: '' },
-          assembly_and_documents: { en: '', ar: '' }
-        }
+          assembly_and_documents: { en: '', ar: '' },
+        },
       },
       vendorId: product.vendorId || this.currentUserId,
       categoryId: product.categoryId || '',
       inStock: product.inStock !== undefined ? product.inStock : true,
       stockQuantity: product.stockQuantity || 0,
       weight: product.weight || { value: null, unit: 'kg' },
-      fullUrl: product.fullUrl || ''
+      fullUrl: product.fullUrl || '',
     });
 
     // Handle variants if they exist
@@ -362,17 +370,94 @@ export class ProductFormComponent implements OnInit {
     }
 
     // Show optional sections if they have data
-    this.showMeasurementSection = !!(product.measurement && 
-      (product.measurement.width || product.measurement.height || 
-       product.measurement.depth || product.measurement.length));
-    
+    this.showMeasurementSection = !!(
+      product.measurement &&
+      (product.measurement.width ||
+        product.measurement.height ||
+        product.measurement.depth ||
+        product.measurement.length)
+    );
+
     this.showWeightSection = !!(product.weight && product.weight.value);
-    
-    this.showProductDetailsSection = !!(product.product_details && 
-      (enParagraphsText || arParagraphsText || 
-       Object.values(product.product_details.expandable_sections || {}).some(section => 
-         section.en || section.ar)));
+
+    this.showProductDetailsSection = !!(
+      product.product_details &&
+      (enParagraphsText ||
+        arParagraphsText ||
+        Object.values(product.product_details.expandable_sections || {}).some(
+          (section) => section.en || section.ar
+        ))
+    );
   }
+
+  // onSubmit(): void {
+  //   if (this.productForm.invalid) {
+  //     this.markFormGroupTouched(this.productForm);
+  //     this.showError('Please fill in all required fields');
+  //     return;
+  //   }
+
+  //   this.isLoading = true;
+  //   const formData = this.prepareFormData();
+
+  //   if (this.isEditMode && this.productId) {
+  //     this.updateProduct(formData);
+  //   } else {
+  //     this.createProduct(formData);
+  //   }
+  // }
+
+  // // Update prepareFormData to properly handle all fields
+  // prepareFormData(): Partial<IProduct> {
+  //   const formValue = this.productForm.value;
+  //   const images = this.textareaToArray(formValue.images);
+
+  //   const productData: Partial<IProduct> = {
+  //     name: formValue.name,
+  //     color: formValue.color,
+  //     price: formValue.price,
+  //     typeName: formValue.typeName,
+  //     images: images,
+  //     short_description: formValue.short_description,
+  //     vendorId: formValue.vendorId,
+  //     categoryId: formValue.categoryId,
+  //     inStock: formValue.inStock,
+  //     stockQuantity: formValue.stockQuantity,
+  //     variants: this.variants || [],
+  //     // Add measurement if section is shown
+  //     ...(this.showMeasurementSection && {
+  //       measurement: {
+  //         unit: formValue.measurement.unit,
+  //         width: formValue.measurement.width || undefined,
+  //         height: formValue.measurement.height || undefined,
+  //         depth: formValue.measurement.depth || undefined,
+  //         length: formValue.measurement.length || undefined
+  //       }
+  //     }),
+  //     // Add weight if section is shown
+  //     ...(this.showWeightSection && formValue.weight.value && {
+  //       weight: formValue.weight
+  //     }),
+  //     // Add product details if section is shown
+  //     ...(this.showProductDetailsSection && {
+  //       product_details: {
+  //         product_details_paragraphs: {
+  //           en: this.textareaToArray(formValue.product_details.product_details_paragraphs.en),
+  //           ar: this.textareaToArray(formValue.product_details.product_details_paragraphs.ar)
+  //         },
+  //         expandable_sections: formValue.product_details.expandable_sections
+  //       }
+  //     }),
+  //     // Add contextual image URL if provided
+  //     ...(formValue.contextualImageUrl && {
+  //       contextualImageUrl: formValue.contextualImageUrl
+  //     })
+  //   };
+
+  //   return productData;
+  // }
+
+  // Add helper method for form validation messages
 
   onSubmit(): void {
     if (this.productForm.valid) {
@@ -388,22 +473,14 @@ export class ProductFormComponent implements OnInit {
       this.markFormGroupTouched(this.productForm);
       this.snackBar.open('Please fill in all required fields', 'Close', {
         duration: 3000,
-        panelClass: ['error-snackbar']
+        panelClass: ['error-snackbar'],
       });
     }
   }
 
   prepareFormData(): Partial<IProduct> {
     const formValue = this.productForm.value;
-    
-    // Convert images textarea to array
     const images = this.textareaToArray(formValue.images);
-    
-    // Convert product details paragraphs textarea to arrays
-    const productDetailsParagraphs = {
-      en: this.textareaToArray(formValue.product_details.product_details_paragraphs.en),
-      ar: this.textareaToArray(formValue.product_details.product_details_paragraphs.ar)
-    };
 
     const productData: Partial<IProduct> = {
       name: formValue.name,
@@ -416,49 +493,41 @@ export class ProductFormComponent implements OnInit {
       categoryId: formValue.categoryId,
       inStock: formValue.inStock,
       stockQuantity: formValue.stockQuantity,
-      variants: this.showVariantsSection ? formValue.variants : []
+      variants: this.variants || [],
+      // Add measurement if section is shown
+      ...(this.showMeasurementSection && {
+        measurement: {
+          unit: formValue.measurement.unit,
+          width: formValue.measurement.width || undefined,
+          height: formValue.measurement.height || undefined,
+          depth: formValue.measurement.depth || undefined,
+          length: formValue.measurement.length || undefined,
+        },
+      }),
+      // Add weight if section is shown
+      ...(this.showWeightSection &&
+        formValue.weight.value && {
+          weight: formValue.weight,
+        }),
+      // Add product details if section is shown
+      ...(this.showProductDetailsSection && {
+        product_details: {
+          product_details_paragraphs: {
+            en: this.textareaToArray(
+              formValue.product_details.product_details_paragraphs.en
+            ),
+            ar: this.textareaToArray(
+              formValue.product_details.product_details_paragraphs.ar
+            ),
+          },
+          expandable_sections: formValue.product_details.expandable_sections,
+        },
+      }),
+      // Add contextual image URL if provided
+      ...(formValue.contextualImageUrl && {
+        contextualImageUrl: formValue.contextualImageUrl,
+      }),
     };
-
-    // Add optional fields only if they have values
-    if (formValue.contextualImageUrl && formValue.contextualImageUrl.trim() !== '') {
-      productData.contextualImageUrl = formValue.contextualImageUrl;
-    }
-
-    if (this.showMeasurementSection) {
-      const measurement = formValue.measurement;
-      if (measurement.width || measurement.height || measurement.depth || measurement.length) {
-        productData.measurement = {
-          ...measurement,
-          // Remove null values
-          width: measurement.width || undefined,
-          height: measurement.height || undefined,
-          depth: measurement.depth || undefined,
-          length: measurement.length || undefined
-        };
-      }
-    }
-
-    if (this.showWeightSection && formValue.weight.value) {
-      productData.weight = formValue.weight;
-    }
-
-    if (this.showProductDetailsSection) {
-      const hasContent = productDetailsParagraphs.en.length > 0 || 
-                        productDetailsParagraphs.ar.length > 0 ||
-                        Object.values(formValue.product_details.expandable_sections).some((section: any) => 
-                          section.en || section.ar);
-      
-      if (hasContent) {
-        productData.product_details = {
-          product_details_paragraphs: productDetailsParagraphs,
-          expandable_sections: formValue.product_details.expandable_sections
-        };
-      }
-    }
-
-    if (formValue.fullUrl && formValue.fullUrl.trim() !== '') {
-      productData.fullUrl = formValue.fullUrl;
-    }
 
     return productData;
   }
@@ -470,56 +539,72 @@ export class ProductFormComponent implements OnInit {
         console.log('Product created successfully:', response);
         this.snackBar.open('Product created successfully', 'Close', {
           duration: 3000,
-          panelClass: ['success-snackbar']
+          panelClass: ['success-snackbar'],
         });
         this.router.navigate(['/products/vendorPros']);
       },
       error: (error) => {
         console.error('Error creating product:', error);
         this.snackBar.open(
-          error.error?.message || 'Failed to create product', 
-          'Close', 
+          error.error?.message || 'Failed to create product',
+          'Close',
           {
             duration: 5000,
-            panelClass: ['error-snackbar']
+            panelClass: ['error-snackbar'],
           }
         );
         this.isLoading = false;
       },
       complete: () => {
         this.isLoading = false;
-      }
+      },
     });
   }
 
   updateProduct(productData: Partial<IProduct>): void {
-    // Note: You'll need to implement this method in your ProductsWithApiService
-    console.log('Updating product:', productData);
-    // this.productsService.updateProduct(this.productId!, productData).subscribe({
-    //   next: (response) => {
-    //     console.log('Product updated successfully');
-    //     this.router.navigate(['/products/vendorPros']);
-    //   },
-    //   error: (error) => {
-    //     console.error('Error updating product:', error);
-    //     this.isLoading = false;
-    //   }
-    // });
-    
-    // Temporary simulation
-    setTimeout(() => {
-      this.isLoading = false;
-      alert('Product would be updated (API method not implemented)');
-      this.router.navigate(['/products/vendorPros']);
-    }, 1000);
+    if (!this.productId) {
+      this.showError('Product ID is missing');
+      return;
+    }
+
+    this.isLoading = true;
+    this.productsService.updateProduct(this.productId, productData).subscribe({
+      next: (response) => {
+        console.log('Product updated successfully:', response);
+        this.showSuccess('Product updated successfully');
+        this.router.navigate(['/products/vendorPros']);
+      },
+      error: (error) => {
+        console.error('Error updating product:', error);
+        this.showError(error.error?.message || 'Failed to update product');
+        this.isLoading = false;
+      },
+      complete: () => {
+        this.isLoading = false;
+      },
+    });
   }
 
-  // Add helper method for form validation messages
+  // Add these helper methods if not already present
+  private showSuccess(message: string): void {
+    this.snackBar.open(message, 'Close', {
+      duration: 3000,
+      panelClass: ['success-snackbar'],
+    });
+  }
+
+  private showError(message: string): void {
+    this.snackBar.open(message, 'Close', {
+      duration: 5000,
+      panelClass: ['error-snackbar'],
+    });
+  }
+
   private showValidationErrors(): void {
     const controls = this.productForm.controls;
     let errorMessage = 'Please check the following fields:\n';
-    
-    Object.keys(controls).forEach(key => {
+
+    Object.keys(controls).forEach((key) => {
       const control = controls[key];
       if (control.errors) {
         errorMessage += `- ${key}\n`;
@@ -528,12 +613,12 @@ export class ProductFormComponent implements OnInit {
 
     this.snackBar.open(errorMessage, 'Close', {
       duration: 5000,
-      panelClass: ['error-snackbar']
+      panelClass: ['error-snackbar'],
     });
   }
 
   private markFormGroupTouched(formGroup: FormGroup | FormArray): void {
-    Object.keys(formGroup.controls).forEach(field => {
+    Object.keys(formGroup.controls).forEach((field) => {
       const control = formGroup.get(field);
       if (control instanceof FormGroup || control instanceof FormArray) {
         this.markFormGroupTouched(control);
@@ -552,22 +637,34 @@ export class ProductFormComponent implements OnInit {
     const control = this.getNestedControl(fieldPath);
     if (control?.errors && control.touched) {
       if (control.errors['required']) return 'This field is required';
-      if (control.errors['min']) return `Minimum value is ${control.errors['min'].min}`;
+      if (control.errors['min'])
+        return `Minimum value is ${control.errors['min'].min}`;
       if (control.errors['pattern']) return 'Invalid format';
-      if (control.errors['requireAtLeastOne']) return 'At least one measurement field is required';
+      if (control.errors['requireAtLeastOne'])
+        return 'At least one measurement field is required';
     }
     return '';
   }
 
   private getNestedControl(path: string): AbstractControl | null {
     let control: AbstractControl | null = this.productForm;
-    
+
     for (const key of path.split('.')) {
-        control = control?.get(key) || null;
-        if (!control) break;
+      control = control?.get(key) || null;
+      if (!control) break;
     }
-    
+
     return control;
+  }
+
+  private createVariantControl(): FormGroup {
+    return this.fb.group({
+      name: ['', Validators.required],
+      price: [0, [Validators.required, Validators.min(0)]],
+      stockQuantity: [0, [Validators.required, Validators.min(0)]],
+      inStock: [true],
+      images: ['', Validators.required],
+    });
   }
 
   isFieldInvalid(fieldPath: string): boolean {
@@ -584,6 +681,15 @@ export class ProductFormComponent implements OnInit {
   // Helper method to check if measurement section has errors
   isMeasurementSectionInvalid(): boolean {
     const measurementControl = this.productForm.get('measurement');
-    return !!(measurementControl?.errors?.['requireAtLeastOne'] && measurementControl?.touched);
+    return !!(
+      measurementControl?.errors?.['requireAtLeastOne'] &&
+      measurementControl?.touched
+    );
+  }
+
+  // Add method to handle variant changes
+  onVariantsChange(variants: IVariant[]) {
+    this.variants = variants;
+    this.productForm.patchValue({ variants: variants });
   }
 }

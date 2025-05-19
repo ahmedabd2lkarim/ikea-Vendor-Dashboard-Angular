@@ -341,27 +341,34 @@ select.form-control:focus {
 /* Collapsible section */
 .section-toggle {
   margin-bottom: 1rem;
+
+  .toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    width: 100%;
+    text-align: left;
+
+    .toggle-icon {
+      transition: transform 0.2s;
+
+      &.expanded {
+        transform: rotate(180deg);
+      }
+    }
+  }
 }
 
-.toggle-btn {
-  background: none;
-  border: none;
-  font-weight: 600;
-  font-size: 1rem;
-  color: #3498db;
-  cursor: pointer;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.toggle-icon {
-  transition: transform 0.3s ease;
-}
-
-.toggle-icon.expanded {
-  transform: rotate(180deg);
+.collapsible-content {
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-top: 0.5rem;
 }
 
 /* Helper text */

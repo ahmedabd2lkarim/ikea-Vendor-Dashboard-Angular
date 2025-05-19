@@ -11,8 +11,16 @@ import { authGuard } from './guards/auth.guard';
 import { ProductFormComponent } from './Components/products/product-form/product-form.component';
 
 export const routes: Routes = [
-  { path: 'login', component: LoginComponent },
-  { path: 'register', component: RegisterComponent },
+  { 
+    path: 'login', 
+    component: LoginComponent,
+    title: 'Login'
+  },
+  { 
+    path: 'register', 
+    component: RegisterComponent,
+    title: 'Register'
+  },
   {
     path: 'orderDet/:ordID',
     component: OrderDetailsComponent,
@@ -44,10 +52,8 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
-    path: 'products/edit/:prdID',
-    component: ProductFormComponent,
-    title: 'Edit Product',
-    canActivate: [authGuard],
+    path: 'products/edit/:id',
+    component: ProductFormComponent
   },
   {
     path: 'products/new',

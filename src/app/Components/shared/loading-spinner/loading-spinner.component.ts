@@ -1,8 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { UiService } from './ui.service';
-import { SomeService } from './some.service';
 @Component({
   selector: 'app-loading-spinner',
   standalone: true,
@@ -55,7 +53,8 @@ export class LoadingSpinnerComponent {}
     <div class="content">
       <!-- Component content -->
     </div>
-  `
+  `,
+  imports: [LoadingSpinnerComponent]
 })
 export class SomeComponent {
   constructor(
@@ -78,6 +77,15 @@ export class SomeComponent {
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class SomeService {
+  doSomething() {
+    return new BehaviorSubject<boolean>(true);
+  }
+}
 
 @Injectable({
   providedIn: 'root'

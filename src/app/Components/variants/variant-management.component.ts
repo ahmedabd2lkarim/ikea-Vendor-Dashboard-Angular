@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { ProductsWithApiService } from '../../Services/products-with-api.service';
@@ -6,90 +6,103 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { IVariant } from '../../Models/ivariant';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
+import { IProduct } from '../../Models/iproduct';
 
 @Component({
   selector: 'app-variant-management',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <div class="variants-container">
-      <h3>Product Variants</h3>
-      
-      <!-- Variants List -->
-      <div class="variants-list" *ngIf="variants.length">
-        <div class="variant-item" *ngFor="let variant of variants">
-          <div class="variant-header">
-            <h4>{{variant.name}}</h4>
-            <div class="variant-actions">
-              <button class="edit-btn" (click)="editVariant(variant)">Edit</button>
-              <button class="delete-btn" (click)="deleteVariant(variant._id)">Delete</button>
-            </div>
+  <div class="variants-container">
+    <h3>Product Variants</h3>
+    
+    <!-- Variants List -->
+    <div class="variants-list" *ngIf="variants.length">
+      <div class="variant-item" *ngFor="let variant of variants">
+        <div class="variant-header">
+          <h4>{{mainProduct.name}} - {{variant.color.en}}</h4>
+          <div class="variant-actions">
+            <button class="edit-btn" (click)="editVariant(variant)">Edit</button>
+            <button class="delete-btn" (click)="deleteVariant(variant._id!)">Delete</button>
           </div>
-          <div class="variant-details">
-            <p>Options: {{variant.color.join(', ')}}</p>
-            <!-- <p *ngIf="variant.price">Prices: {{variant.prices.join(', ')}}</p> -->
-          </div>
+        </div>
+        <div class="variant-details">
+          <p>Color: {{variant.color.en}} / {{variant.color.ar}}</p>
+          <p>Price: {{variant.price.currency}} {{variant.price.currentPrice}}</p>
+          <p *ngIf="variant.measurement">
+            Measurements: 
+            <span *ngIf="variant.measurement.width">W: {{variant.measurement.width}}{{variant.measurement.unit}}</span>
+            <span *ngIf="variant.measurement.height">H: {{variant.measurement.height}}{{variant.measurement.unit}}</span>
+            <span *ngIf="variant.measurement.depth">D: {{variant.measurement.depth}}{{variant.measurement.unit}}</span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <form [formGroup]="variantForm" (ngSubmit)="onSubmit()" *ngIf="showForm && variantForm" class="variant-form">
+      <!-- Color Group -->
+      <div formGroupName="color" class="form-group">
+        <label>Color <span class="required">*</span></label>
+        <div class="bilingual-fields">
+          <input type="text" formControlName="en" placeholder="English" 
+                 [class.error]="variantForm.get('color.en')?.invalid && variantForm.get('color.en')?.touched">
+          <input type="text" formControlName="ar" placeholder="Arabic" dir="rtl"
+                 [class.error]="variantForm.get('color.ar')?.invalid && variantForm.get('color.ar')?.touched">
+        </div>
+        <div class="error-message" *ngIf="variantForm.get('color.en')?.invalid && variantForm.get('color.en')?.touched">
+          Color in English is required
+        </div>
+        <div class="error-message" *ngIf="variantForm.get('color.ar')?.invalid && variantForm.get('color.ar')?.touched">
+          Color in Arabic is required
         </div>
       </div>
 
-      <form [formGroup]="variantForm" (ngSubmit)="onSubmit()" *ngIf="showForm">
-        <div formGroupName="color" class="form-group">
-          <label for="colorEn">Color (English)</label>
-          <input type="text" id="colorEn" formControlName="en" class="form-control" placeholder="Enter color in English" />
-        </div>
-
-        <div formGroupName="color" class="form-group">
-          <label for="colorAr">Color (Arabic)</label>
-          <input type="text" id="colorAr" formControlName="ar" class="form-control" placeholder="Enter color in Arabic" />
-        </div>
-
-        <div formGroupName="price" class="form-group">
-          <label for="currentPrice">Price</label>
-          <input type="number" id="currentPrice" formControlName="currentPrice" class="form-control" placeholder="Enter price" />
-        </div>
-
-        <div formGroupName="price" class="form-group">
-          <label for="currency">Currency</label>
-          <input type="text" id="currency" formControlName="currency" class="form-control" placeholder="Enter currency" />
-        </div>
-
-        <div class="form-group">
-          <label>Options</label>
-          <div formArrayName="options">
-            <div *ngFor="let option of optionsArray.controls; let i=index">
-              <div class="option-row">
-                <input [formControlName]="i" placeholder="Option value">
-                <button type="button" (click)="removeOption(i)">Remove</button>
-              </div>
-            </div>
+      <!-- Price Group -->
+      <div formGroupName="price" class="form-group">
+        <label>Price <span class="required">*</span></label>
+        <div class="price-fields">
+          <input type="number" formControlName="currentPrice" placeholder="Price" min="0"
+                 [class.error]="variantForm.get('price.currentPrice')?.invalid && variantForm.get('price.currentPrice')?.touched">
+          <input type="text" formControlName="currency" [value]="mainProduct?.price?.currency" readonly>
+          <div class="checkbox-field">
+            <label>
+              <input type="checkbox" formControlName="discounted">
+              Discounted
+            </label>
           </div>
-          <button type="button" (click)="addOption()">Add Option</button>
         </div>
+        <div class="error-message" *ngIf="variantForm.get('price.currentPrice')?.invalid && variantForm.get('price.currentPrice')?.touched">
+          Please enter a valid price
+        </div>
+      </div>
 
-        <div class="form-group">
-          <label>Prices</label>
-          <div formArrayName="prices">
-            <div *ngFor="let price of pricesArray.controls; let i=index">
-              <div class="price-row">
-                <input type="number" [formControlName]="i" placeholder="Price">
-                <button type="button" (click)="removePrice(i)">Remove</button>
-              </div>
-            </div>
+      <!-- Images -->
+      <div class="form-group">
+        <label>Images</label>
+        <div formArrayName="images" class="images-list" *ngIf="imagesArray">
+          <div *ngFor="let image of imagesArray?.controls; let i=index" class="image-item">
+            <input [formControlName]="i" placeholder="Image URL">
+            <button type="button" class="remove-btn" (click)="removeImage(i)">×</button>
           </div>
-          <button type="button" (click)="addPrice()">Add Price</button>
         </div>
+        <button type="button" class="add-image-btn" (click)="addImage()">
+          + Add Image
+        </button>
+      </div>
 
-        <div class="form-actions">
-          <button type="button" class="cancel-btn" (click)="cancelEdit()">Cancel</button>
-          <button type="submit" [disabled]="variantForm.invalid">Submit</button>
-        </div>
-      </form>
+      <div class="form-actions">
+        <button type="button" class="cancel-btn" (click)="cancelEdit()">Cancel</button>
+        <button type="submit" [disabled]="variantForm.invalid || isLoading">
+          {{ editingVariantId ? 'Update' : 'Add' }} Variant
+        </button>
+      </div>
+    </form>
 
-      <button class="add-variant-btn" *ngIf="!showForm" (click)="showAddForm()">
-        Add New Variant
-      </button>
-    </div>
-  `,
+    <button class="add-variant-btn" *ngIf="!showForm" (click)="showAddForm()">
+      Add New Variant
+    </button>
+  </div>
+`,
   styles: [`
     .variants-container {
       padding: 1rem;
@@ -160,13 +173,72 @@ import { ActivatedRoute, Router } from '@angular/router';
       width: 100%;
       margin-top: 1rem;
     }
+
+    .error-message {
+      color: #dc3545;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+
+    .checkbox-field {
+      display: flex;
+      align-items: center;
+    }
+
+    .checkbox-field label {
+      margin-left: 0.5rem;
+    }
+
+    .bilingual-fields {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .images-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .image-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .remove-btn {
+      background: transparent;
+      color: #dc3545;
+      cursor: pointer;
+      border: none;
+      font-size: 1.25rem;
+      line-height: 1;
+    }
+
+    .add-image-btn {
+      background: #0051ba;
+      color: white;
+      border: none;
+      padding: 0.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .required {
+      color: #dc3545;
+    }
   `]
 })
 export class VariantManagementComponent implements OnInit {
   @Input() productId!: string;
-  @Input() productName!: string;
+  @Input() mainProduct!: IProduct;
   @Input() variants: IVariant[] = [];
-  variantForm!: FormGroup;
+  @Output() variantsChange = new EventEmitter<IVariant[]>();
+
+  variantForm: FormGroup;
   showForm = false;
   editingVariantId: string | null = null;
   isLoading = false;
@@ -174,138 +246,97 @@ export class VariantManagementComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private productsService: ProductsWithApiService,
-    private snackBar: MatSnackBar,
-    private route: ActivatedRoute,
-    private router: Router
+    private snackBar: MatSnackBar
   ) {
-    this.initForm();
+    // Initialize form in constructor
+    this.variantForm = this.createVariantForm();
   }
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe(params => {
-      const id = params.get('id');
-      this.productId = id ? id : '';
-      if (this.productId) {
-        this.loadProduct(this.productId);
-      }
-    });
+    // Re-initialize form when main product changes
+    if (this.mainProduct) {
+      this.variantForm = this.createVariantForm();
+    }
   }
 
-  private initForm() {
-    this.variantForm = this.fb.group({
+  private createVariantForm(): FormGroup {
+    return this.fb.group({
       color: this.fb.group({
         en: ['', Validators.required],
-        ar: ['', Validators.required],
+        ar: ['', Validators.required]
       }),
       price: this.fb.group({
-        currency: ['', Validators.required],
+        currency: [{ 
+          value: this.mainProduct?.price?.currency || 'EGP', 
+          disabled: true 
+        }],
         currentPrice: [0, [Validators.required, Validators.min(0)]],
-        discounted: [false],
+        discounted: [false]
       }),
       measurement: this.fb.group({
-        unit: [''],
+        unit: [{ 
+          value: this.mainProduct?.measurement?.unit || 'cm', 
+          disabled: true 
+        }],
         width: [null],
         height: [null],
         depth: [null],
-        length: [null],
+        length: [null]
       }),
-      typeName: this.fb.group({
-        en: ['', Validators.required],
-        ar: ['', Validators.required],
-      }),
-      imageAlt: this.fb.group({
-        en: ['', Validators.required],
-        ar: ['', Validators.required],
-      }),
-      short_description: this.fb.group({
-        en: ['', Validators.required],
-        ar: ['', Validators.required],
-      }),
-      images: this.fb.array([]),
+      images: this.fb.array([])
     });
   }
 
-  get optionsArray() {
-    return this.variantForm.get('options') as FormArray;
-  }
-
-  get pricesArray() {
-    return this.variantForm.get('prices') as FormArray;
-  }
-
-  loadVariants() {
-    this.productsService.getProductVariants(this.productId).subscribe({
-      next: (variants) => {
-        this.variants = variants;
-      },
-      error: (error) => {
-        console.error('Error loading variants:', error);
-        this.showError('Failed to load variants');
-      }
-    });
-  }
-
-  addOption() {
-    this.optionsArray.push(this.fb.control('', Validators.required));
-  }
-
-  removeOption(index: number) {
-    this.optionsArray.removeAt(index);
-  }
-
-  addPrice() {
-    this.pricesArray.push(this.fb.control('', [Validators.required, Validators.min(0)]));
-  }
-
-  removePrice(index: number) {
-    this.pricesArray.removeAt(index);
+  get imagesArray(): FormArray {
+    return this.variantForm.get('images') as FormArray;
   }
 
   showAddForm() {
     this.showForm = true;
     this.editingVariantId = null;
-    this.variantForm.reset();
-    this.optionsArray.clear();
-    this.pricesArray.clear();
-    this.addOption();
+    
+    // Safely reset form
+    if (this.variantForm) {
+      this.variantForm.reset({
+        price: { 
+          currency: this.mainProduct?.price?.currency || 'EGP',
+          discounted: false
+        },
+        measurement: { 
+          unit: this.mainProduct?.measurement?.unit || 'cm'
+        }
+      });
+
+      // Safely clear arrays
+      const imagesArray = this.imagesArray;
+      if (imagesArray) {
+        while (imagesArray.length) {
+          imagesArray.removeAt(0);
+        }
+      }
+    }
+  }
+
+  addImage() {
+    this.imagesArray.push(this.fb.control(''));
+  }
+
+  removeImage(index: number) {
+    this.imagesArray.removeAt(index);
   }
 
   editVariant(variant: IVariant) {
     this.showForm = true;
     this.editingVariantId = variant._id ?? null;
     
-    this.optionsArray.clear();
-    this.pricesArray.clear();
-    
     this.variantForm.patchValue({
-      color: {
-        en: variant.color.en,
-        ar: variant.color.ar,
-      },
+      color: variant.color,
       price: {
-        currency: variant.price.currency,
         currentPrice: variant.price.currentPrice,
-        discounted: variant.price.discounted,
+        discounted: variant.price.discounted
       },
-      measurement: {
-        unit: variant.measurement?.unit,
-        width: variant.measurement?.width,
-        height: variant.measurement?.height,
-        depth: variant.measurement?.depth,
-        length: variant.measurement?.length,
-      },
-      typeName: {
-        en: variant.typeName.en,
-        ar: variant.typeName.ar,
-      },
-      imageAlt: {
-        en: variant.imageAlt.en,
-        ar: variant.imageAlt.ar,
-      },
-      short_description: {
-        en: variant.short_description.en,
-        ar: variant.short_description.ar,
-      },
+      measurement: variant.measurement,
+      images: variant.images
     });
   }
 
@@ -317,129 +348,78 @@ export class VariantManagementComponent implements OnInit {
 
   onSubmit() {
     if (this.variantForm.invalid) {
-      console.error('Form is invalid:', this.variantForm.errors);
-      return; // Prevent submission
+      this.variantForm.markAllAsTouched();
+      return;
     }
 
     this.isLoading = true;
-
-    // Construct the variant data from the form
+    const formValue = this.variantForm.value;
     const variantData: IVariant = {
-      name: this.productName,
-      color: {
-        en: this.variantForm.value.color.en,
-        ar: this.variantForm.value.color.ar,
-      },
-      price: {
-        currency: this.variantForm.value.price.currency,
-        currentPrice: this.variantForm.value.price.currentPrice,
-        discounted: this.variantForm.value.price.discounted,
-      },
-      measurement: {
-        unit: this.variantForm.value.measurement.unit,
-        width: this.variantForm.value.measurement.width,
-        height: this.variantForm.value.measurement.height,
-        depth: this.variantForm.value.measurement.depth,
-        length: this.variantForm.value.measurement.length,
-      },
-      typeName: {
-        en: this.variantForm.value.typeName.en,
-        ar: this.variantForm.value.typeName.ar,
-      },
-      imageAlt: {
-        en: this.variantForm.value.imageAlt.en,
-        ar: this.variantForm.value.imageAlt.ar,
-      },
-      short_description: {
-        en: this.variantForm.value.short_description.en,
-        ar: this.variantForm.value.short_description.ar,
-      },
-      product_details: {
-        product_details_paragraphs: {
-          en: this.variantForm.value.product_details.product_details_paragraphs.en,
-          ar: this.variantForm.value.product_details.product_details_paragraphs.ar,
-        },
-        expandable_sections: {
-          materials_and_care: {
-            en: this.variantForm.value.product_details.expandable_sections.materials_and_care.en,
-            ar: this.variantForm.value.product_details.expandable_sections.materials_and_care.ar,
-          },
-          details_certifications: {
-            en: this.variantForm.value.product_details.expandable_sections.details_certifications.en,
-            ar: this.variantForm.value.product_details.expandable_sections.details_certifications.ar,
-          },
-          good_to_know: {
-            en: this.variantForm.value.product_details.expandable_sections.good_to_know.en,
-            ar: this.variantForm.value.product_details.expandable_sections.good_to_know.ar,
-          },
-          safety_and_compliance: {
-            en: this.variantForm.value.product_details.expandable_sections.safety_and_compliance.en,
-            ar: this.variantForm.value.product_details.expandable_sections.safety_and_compliance.ar,
-          },
-          assembly_and_documents: {
-            en: this.variantForm.value.product_details.expandable_sections.assembly_and_documents.en,
-            ar: this.variantForm.value.product_details.expandable_sections.assembly_and_documents.ar,
-          },
-        },
-      },
-      images: this.variantForm.value.images,
+      _id: this.editingVariantId || undefined,
+      name: this.mainProduct.name,
+      typeName: this.mainProduct.typeName,
+      imageAlt: this.mainProduct.imageAlt,
+      short_description: this.mainProduct.short_description,
+      product_details: this.mainProduct.product_details,
+      color: formValue.color,
+      price: formValue.price,
+      measurement: formValue.measurement,
+      images: formValue.images.filter((img: string) => img)
     };
 
-    if (this.productId) {
-      // Update existing product
-      this.productsService.updateProduct(this.productId, variantData).subscribe({
-        next: () => {
-          this.router.navigate(['/products/vendorPros']); // Redirect after successful update
-        },
-        error: (error) => {
-          console.error('Error updating product:', error);
-        }
-      });
+    if (this.editingVariantId) {
+      // Update existing variant
+      this.productsService.updateVariant(this.productId, this.editingVariantId, variantData)
+        .subscribe({
+          next: (updatedVariant) => {
+            this.snackBar.open('Variant updated successfully', 'Close', { duration: 3000 });
+            this.isLoading = false;
+            this.cancelEdit();
+            this.variantsChange.emit(this.variants.map(v => v._id === updatedVariant._id ? updatedVariant : v));
+          },
+          error: (error: HttpErrorResponse) => {
+            this.isLoading = false;
+            this.snackBar.open('Error updating variant: ' + (error.error.message || 'Unknown error'), 'Close', { duration: 5000 });
+          }
+        });
     } else {
-      // Create new product
-      this.productsService.createProduct(variantData).subscribe({
-        next: () => {
-          this.router.navigate(['/products/vendorPros']); // Redirect after successful creation
-        },
-        error: (error) => {
-          console.error('Error creating product:', error);
-        }
-      });
+      // Add new variant
+      this.productsService.addVariant(this.productId, variantData)
+        .subscribe({
+          next: (newVariant) => {
+            this.snackBar.open('Variant added successfully', 'Close', { duration: 3000 });
+            this.isLoading = false;
+            this.cancelEdit();
+            this.variantsChange.emit([...this.variants, newVariant]);
+          },
+          error: (error: HttpErrorResponse) => {
+            this.isLoading = false;
+            this.snackBar.open('Error adding variant: ' + (error.error.message || 'Unknown error'), 'Close', { duration: 5000 });
+          }
+        });
     }
   }
 
   deleteVariant(variantId: string) {
-    if (confirm('Are you sure you want to delete this variant?')) {
-      this.productsService.deleteVariant(this.productId, variantId).subscribe({
-        next: () => {
-          this.loadVariants();
-          this.showSuccess('Variant deleted');
-        },
-        error: (error) => {
-          console.error('Error deleting variant:', error);
-          this.showError('Failed to delete variant');
-        }
-      });
+    if (!confirm('Are you sure you want to delete this variant?')) {
+      return;
     }
+
+    // Find and remove the variant from the array
+    this.variants = this.variants.filter(variant => variant._id !== variantId);
+    
+    // Emit the updated variants array
+    this.variantsChange.emit(this.variants);
+
+    // Show success message
+    this.showSuccess('Variant deleted successfully');
   }
 
   private showSuccess(message: string) {
+    // If you're using MatSnackBar
     this.snackBar.open(message, 'Close', {
       duration: 3000,
       panelClass: ['success-snackbar']
-    });
-  }
-
-  private showError(message: string) {
-    this.snackBar.open(message, 'Close', {
-      duration: 5000,
-      panelClass: ['error-snackbar']
-    });
-  }
-
-  loadProduct(id: string) {
-    this.productsService.getProductById(id).subscribe(product => {
-      this.variantForm.patchValue(product); // Populate the form with product data
     });
   }
 }

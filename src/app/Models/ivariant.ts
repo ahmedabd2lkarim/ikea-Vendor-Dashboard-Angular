@@ -36,26 +36,11 @@ export interface IVariant {
       ar: string[];
     };
     expandable_sections: {
-      materials_and_care: {
-        en: string;
-        ar: string;
-      };
-      details_certifications: {
-        en: string;
-        ar: string;
-      };
-      good_to_know: {
-        en: string;
-        ar: string;
-      };
-      safety_and_compliance: {
-        en: string;
-        ar: string;
-      };
-      assembly_and_documents: {
-        en: string;
-        ar: string;
-      };
+      materials_and_care: { en: string; ar: string };
+      details_certifications: { en: string; ar: string };
+      good_to_know: { en: string; ar: string };
+      safety_and_compliance: { en: string; ar: string };
+      assembly_and_documents: { en: string; ar: string };
     };
   };
   images: string[];
