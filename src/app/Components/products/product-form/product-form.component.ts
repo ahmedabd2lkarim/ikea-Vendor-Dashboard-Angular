@@ -5,14 +5,21 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Icategory } from '../../../Models/icategory';
 import { ProductsWithApiService } from '../../../Services/products-with-api.service';
 import { IProduct } from '../../../Models/iproduct';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 export type ProductFormData = IProduct; 
 
 @Component({
   selector: 'app-product-form',
-  imports: [ReactiveFormsModule, CommonModule],
+  standalone: true,
+  imports: [
+    ReactiveFormsModule, 
+    CommonModule,
+    MatSnackBarModule
+  ],
   templateUrl: './product-form.component.html',
-  styleUrl: './product-form.component.scss'
+  styleUrls: ['./product-form.component.scss']
 })
 export class ProductFormComponent implements OnInit {
   @Input() isEditMode: boolean = false;
@@ -33,7 +40,8 @@ export class ProductFormComponent implements OnInit {
     private fb: FormBuilder,
     private productsService: ProductsWithApiService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
@@ -378,6 +386,10 @@ export class ProductFormComponent implements OnInit {
       }
     } else {
       this.markFormGroupTouched(this.productForm);
+      this.snackBar.open('Please fill in all required fields', 'Close', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
     }
   }
 
@@ -452,25 +464,32 @@ export class ProductFormComponent implements OnInit {
   }
 
   createProduct(productData: Partial<IProduct>): void {
-    // Note: You'll need to implement this method in your ProductsWithApiService
-    console.log('Creating product:', productData);
-    // this.productsService.createProduct(productData).subscribe({
-    //   next: (response) => {
-    //     console.log('Product created successfully');
-    //     this.router.navigate(['/products/vendorPros']);
-    //   },
-    //   error: (error) => {
-    //     console.error('Error creating product:', error);
-    //     this.isLoading = false;
-    //   }
-    // });
-    
-    // Temporary simulation
-    setTimeout(() => {
-      this.isLoading = false;
-      alert('Product would be created (API method not implemented)');
-      this.router.navigate(['/products/vendorPros']);
-    }, 1000);
+    this.isLoading = true;
+    this.productsService.createProduct(productData).subscribe({
+      next: (response) => {
+        console.log('Product created successfully:', response);
+        this.snackBar.open('Product created successfully', 'Close', {
+          duration: 3000,
+          panelClass: ['success-snackbar']
+        });
+        this.router.navigate(['/products/vendorPros']);
+      },
+      error: (error) => {
+        console.error('Error creating product:', error);
+        this.snackBar.open(
+          error.error?.message || 'Failed to create product', 
+          'Close', 
+          {
+            duration: 5000,
+            panelClass: ['error-snackbar']
+          }
+        );
+        this.isLoading = false;
+      },
+      complete: () => {
+        this.isLoading = false;
+      }
+    });
   }
 
   updateProduct(productData: Partial<IProduct>): void {
@@ -493,6 +512,24 @@ export class ProductFormComponent implements OnInit {
       alert('Product would be updated (API method not implemented)');
       this.router.navigate(['/products/vendorPros']);
     }, 1000);
+  }
+
+  // Add helper method for form validation messages
+  private showValidationErrors(): void {
+    const controls = this.productForm.controls;
+    let errorMessage = 'Please check the following fields:\n';
+    
+    Object.keys(controls).forEach(key => {
+      const control = controls[key];
+      if (control.errors) {
+        errorMessage += `- ${key}\n`;
+      }
+    });
+
+    this.snackBar.open(errorMessage, 'Close', {
+      duration: 5000,
+      panelClass: ['error-snackbar']
+    });
   }
 
   private markFormGroupTouched(formGroup: FormGroup | FormArray): void {
