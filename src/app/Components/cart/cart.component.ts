@@ -223,6 +223,7 @@ export class CartComponent implements OnInit {
 
     this.cartService.getVendorOrders().subscribe({
       next: (orders) => {
+        console.log(orders);
         this.dataSource.data = orders;
         this.isLoading = false;
       },

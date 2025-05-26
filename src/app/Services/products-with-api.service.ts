@@ -50,10 +50,7 @@ export class ProductsWithApiService {
     };
 
     return this.http
-      .patch<IProduct>(
-        `${this.baseURL}/products/vendor/${id}`,
-        productData
-      )
+      .patch<IProduct>(`${this.baseURL}/products/vendor/${id}`, productData)
       .pipe(
         catchError((error) => {
           console.error('API Error:', error);

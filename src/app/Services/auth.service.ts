@@ -20,7 +20,8 @@ export interface VendorRegister {
   storeName: string;
   storeAddress: string;
   mobileNumber: string;
-  role: string; // Add this field
+  homeAddress:string;
+  role: string; 
 }
 
 @Injectable({

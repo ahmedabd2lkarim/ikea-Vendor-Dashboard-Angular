@@ -1,0 +1,252 @@
+<div class="variants-container">
+    <h3>Product Variants</h3>
+
+    <div class="variants-list" *ngIf="variants.length">
+      <div class="variant-item" *ngFor="let variant of variants">
+        <div class="variant-header">
+          <h4>{{ mainProduct.name }} - {{ variant.color.en }}</h4>
+          <div class="variant-actions">
+            <button class="edit-btn" (click)="editVariant(variant)">
+              Edit
+            </button>
+            <button class="delete-btn" (click)="deleteVariant(variant._id!)">
+              Delete
+            </button>
+          </div>
+        </div>
+        <div class="variant-details">
+          <p>Color: {{ variant.color.en }} / {{ variant.color.ar }}</p>
+          <p>
+            Price: {{ variant.price.currency }}
+            {{ variant.price.currentPrice }}
+          </p>
+          <p *ngIf="variant.measurement">
+            Measurements:
+            <span *ngIf="variant.measurement.width"
+              >W: {{ variant.measurement.width
+              }}{{ variant.measurement.unit }}</span
+            >
+            <span *ngIf="variant.measurement.height"
+              >H: {{ variant.measurement.height
+              }}{{ variant.measurement.unit }}</span
+            >
+            <span *ngIf="variant.measurement.depth"
+              >D: {{ variant.measurement.depth
+              }}{{ variant.measurement.unit }}</span
+            >
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <form
+      [formGroup]="variantForm"
+      (ngSubmit)="onSubmit()"
+      *ngIf="showForm && variantForm"
+      class="variant-form"
+    >
+      <!-- Color Group -->
+      <div formGroupName="color" class="form-group">
+        <label>Color <span class="required">*</span></label>
+        <div class="bilingual-fields">
+          <input
+            type="text"
+            formControlName="en"
+            placeholder="English"
+            [class.error]="
+              variantForm.get('color.en')?.invalid &&
+              variantForm.get('color.en')?.touched
+            "
+          />
+          <input
+            type="text"
+            formControlName="ar"
+            placeholder="Arabic"
+            dir="rtl"
+            [class.error]="
+              variantForm.get('color.ar')?.invalid &&
+              variantForm.get('color.ar')?.touched
+            "
+          />
+        </div>
+        <div
+          class="error-message"
+          *ngIf="
+            variantForm.get('color.en')?.invalid &&
+            variantForm.get('color.en')?.touched
+          "
+        >
+          Color in English is required
+        </div>
+        <div
+          class="error-message"
+          *ngIf="
+            variantForm.get('color.ar')?.invalid &&
+            variantForm.get('color.ar')?.touched
+          "
+        >
+          Color in Arabic is required
+        </div>
+      </div>
+
+      <!-- Price Group -->
+      <div formGroupName="price" class="form-group">
+        <label>Price <span class="required">*</span></label>
+        <div class="price-fields">
+          <input
+            type="number"
+            formControlName="currentPrice"
+            placeholder="Price"
+            min="0"
+            [class.error]="
+              variantForm.get('price.currentPrice')?.invalid &&
+              variantForm.get('price.currentPrice')?.touched
+            "
+          />
+          <input
+            type="text"
+            formControlName="currency"
+            [value]="mainProduct?.price?.currency"
+            readonly
+          />
+          <div class="checkbox-field">
+            <label>
+              <input type="checkbox" formControlName="discounted" />
+              Discounted
+            </label>
+          </div>
+        </div>
+        <div
+          class="error-message"
+          *ngIf="
+            variantForm.get('price.currentPrice')?.invalid &&
+            variantForm.get('price.currentPrice')?.touched
+          "
+        >
+          Please enter a valid price
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="section-toggle">
+          <button
+            type="button"
+            class="toggle-btn"
+            (click)="toggleMeasurementSection()"
+          >
+            <span class="toggle-icon" [class.expanded]="showMeasurementSection"
+              >▼</span
+            >
+            Measurements (Optional)
+          </button>
+        </div>
+  
+        <div
+          *ngIf="showMeasurementSection"
+          class="collapsible-content"
+          formGroupName="measurement"
+        >
+          <div class="measurement-fields">
+            <div class="form-group">
+              <label for="width">Width</label>
+              <input
+                type="number"
+                id="width"
+                formControlName="width"
+                class="form-control"
+                placeholder="0"
+                min="0"
+                step="0.01"
+              />
+            </div>
+            <div class="form-group">
+              <label for="height">Height</label>
+              <input
+                type="number"
+                id="height"
+                formControlName="height"
+                class="form-control"
+                placeholder="0"
+                min="0"
+                step="0.01"
+              />
+            </div>
+            <div class="form-group">
+              <label for="depth">Depth</label>
+              <input
+                type="number"
+                id="depth"
+                formControlName="depth"
+                class="form-control"
+                placeholder="0"
+                min="0"
+                step="0.01"
+              />
+            </div>
+            <div class="form-group">
+              <label for="length">Length</label>
+              <input
+                type="number"
+                id="length"
+                formControlName="length"
+                class="form-control"
+                placeholder="0"
+                min="0"
+                step="0.01"
+              />
+            </div>
+            <div class="form-group">
+              <label for="measurement-unit"
+                >Unit <span class="required">*</span></label
+              >
+              <select
+                id="measurement-unit"
+                formControlName="unit"
+                class="form-control"
+              >
+                <option *ngFor="let unit of measurementUnits"  [value]="unit">
+                  {{ unit }}
+                </option>
+              </select>
+            </div>
+          </div>
+          <div *ngIf="isMeasurementSectionInvalid()" class="error-message">
+            At least one measurement field is required when this section is
+            enabled
+          </div>
+        </div>
+      </div>
+
+      <!-- Images -->
+      <div class="form-group">
+        <label>Images</label>
+        <div formArrayName="images" class="images-list" *ngIf="imagesArray">
+          <div
+            *ngFor="let image of imagesArray?.controls; let i = index"
+            class="image-item"
+          >
+            <input [formControlName]="i" placeholder="Image URL" />
+            <button type="button" class="remove-btn" (click)="removeImage(i)">
+              ×
+            </button>
+          </div>
+        </div>
+        <button type="button" class="add-image-btn" (click)="addImage()">
+          + Add Image
+        </button>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="cancel-btn" (click)="cancelEdit()">
+          Cancel
+        </button>
+        <button type="submit" [disabled]="variantForm.invalid || isLoading">
+          {{ editingVariantId ? 'Update' : 'Add' }} Variant
+        </button>
+      </div>
+    </form>
+
+    <button class="add-variant-btn" *ngIf="!showForm" (click)="showAddForm()">
+      Add New Variant
+    </button>
+  </div>

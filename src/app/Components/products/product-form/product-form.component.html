@@ -3,8 +3,12 @@
     <h2>{{ isEditMode ? "Edit Product" : "Add New Product" }}</h2>
   </div>
 
-  <form [formGroup]="productForm" (ngSubmit)="onSubmit()" class="product-form">
-    <!-- Loading Spinner -->
+  <form
+    *ngIf="isAccepted"
+    [formGroup]="productForm"
+    (ngSubmit)="onSubmit()"
+    class="product-form"
+  >
     <div *ngIf="isLoading" class="loading-spinner">
       <div class="spinner"></div>
       <p>{{ isEditMode ? "Loading product..." : "Saving product..." }}</p>
@@ -274,17 +278,6 @@
         <div *ngIf="isFieldInvalid('contextualImageUrl')" class="error-message">
           {{ getFieldError("contextualImageUrl") }}
         </div>
-      </div>
-
-      <div class="form-group">
-        <label for="fullUrl">Full URL (Optional)</label>
-        <input
-          type="text"
-          id="fullUrl"
-          formControlName="fullUrl"
-          class="form-control"
-          placeholder="Enter full URL"
-        />
       </div>
     </div>
 
@@ -645,12 +638,19 @@
         </button>
       </div>
 
-      <div *ngIf="showVariantsSection" class="collapsible-content">
+      <div *ngIf="!isEditMode && showVariantsSection" style="color: red">
+        Please save the product first before adding variants.
+      </div>
+      <div
+        *ngIf="showVariantsSection && isEditMode"
+        class="collapsible-content"
+      >
         <app-variant-management
           [productId]="productId!"
           [mainProduct]="productForm.value"
           [variants]="variants"
-          (variantsChange)="onVariantsChange($event)">
+          (variantsChange)="onVariantsChange($event)"
+        >
         </app-variant-management>
       </div>
     </div>
@@ -674,4 +674,11 @@
       </button>
     </div>
   </form>
+  <div
+    *ngIf="!isAccepted"
+    style="color: red; text-align: center; font-weight: bold"
+  >
+    <p>Sorry you don't have permission to do this action!</p>
+    Contact with admin.
+  </div>
 </div>

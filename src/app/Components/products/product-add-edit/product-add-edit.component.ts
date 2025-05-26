@@ -8,6 +8,7 @@ import { ProductFormComponent } from '../product-form/product-form.component';
 
 @Component({
   selector: 'app-product-add-edit',
+  standalone:true,
   template: `
     <h2>{{ isEdit ? 'Edit Product' : 'Add Product' }}</h2>
     <app-product-form
@@ -15,6 +16,7 @@ import { ProductFormComponent } from '../product-form/product-form.component';
       (formSubmit)="handleSubmit($event)"
     ></app-product-form>
   `,
+  imports: [ProductFormComponent],
 })
 export class ProductAddEditComponent implements OnInit {
   isEdit = false;

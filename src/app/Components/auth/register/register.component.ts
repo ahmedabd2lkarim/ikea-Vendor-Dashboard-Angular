@@ -370,8 +370,9 @@ export class RegisterComponent {
     this.isLoading = true;
     const formData = {
       ...this.registerForm.value,
-      role: 'vendor', // Ensure role is set even if form field is missing
+      role: 'vendor', homeAddress:" "
     };
+    console.log(formData)
 
     this.authService.register(formData).subscribe({
       next: () => {

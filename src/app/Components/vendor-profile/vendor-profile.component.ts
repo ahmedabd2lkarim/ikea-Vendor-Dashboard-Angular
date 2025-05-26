@@ -34,7 +34,7 @@ export class VendorProfileComponent implements OnInit{
       storeName:[this.vendorData.storeName,[Validators.required]],
       storeAddress:[this.vendorData.storeAddress,[Validators.required]],
       currentPass:[''],
-      newPass:['']
+      newPass:[''],
     })
   }
 

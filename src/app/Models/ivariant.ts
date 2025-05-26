@@ -1,6 +1,5 @@
 export interface IVariant {
   _id?: string;
-  name: string;
   color: {
     en: string;
     ar: string;
@@ -10,7 +9,6 @@ export interface IVariant {
     currentPrice: number;
     discounted: boolean;
   };
-  contextualImageUrl?: string;
   measurement?: {
     unit?: string;
     width?: number;
@@ -18,31 +16,6 @@ export interface IVariant {
     depth?: number;
     length?: number;
   };
-  typeName: {
-    en: string;
-    ar: string;
-  };
-  imageAlt: {
-    en: string;
-    ar: string;
-  };
-  short_description: {
-    en: string;
-    ar: string;
-  };
-  product_details: {
-    product_details_paragraphs: {
-      en: string[];
-      ar: string[];
-    };
-    expandable_sections: {
-      materials_and_care: { en: string; ar: string };
-      details_certifications: { en: string; ar: string };
-      good_to_know: { en: string; ar: string };
-      safety_and_compliance: { en: string; ar: string };
-      assembly_and_documents: { en: string; ar: string };
-    };
-  };
+  contextualImageUrl?: string;
   images: string[];
-  fullUrl?: string;
 }

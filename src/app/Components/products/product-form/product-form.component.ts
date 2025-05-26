@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, EventEmitter, Output } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -16,6 +16,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { VariantManagementComponent } from '../../variants/variant-management.component';
 import { IVariant } from '../../../Models/ivariant';
+import { VendorProfileService } from '../../../Services/vendor-profile.service';
 
 export type ProductFormData = IProduct;
 
@@ -32,7 +33,9 @@ export type ProductFormData = IProduct;
   styleUrls: ['./product-form.component.scss'],
 })
 export class ProductFormComponent implements OnInit {
+  @Input() initialData?: IProduct | null;
   @Input() isEditMode: boolean = false;
+  @Output() formSubmit = new EventEmitter<Partial<IProduct>>();
   productId: string | null = null;
 
   productForm!: FormGroup;
@@ -44,18 +47,19 @@ export class ProductFormComponent implements OnInit {
   showMeasurementSection = false;
   showWeightSection = false;
   showProductDetailsSection = false;
-  currentUserId = ''; // This should come from auth service
-  variants: any[] = []; // Add this line
+  currentUserId = '';
+  variants: any[] = [];
+  isAccepted = true;
 
   constructor(
     private fb: FormBuilder,
     private productsService: ProductsWithApiService,
     private route: ActivatedRoute,
     private router: Router,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private vendorService: VendorProfileService
   ) {}
 
-  // Getter for variants FormArray
   get variantsArray() {
     return this.productForm.get('variants') as FormArray;
   }
@@ -65,13 +69,18 @@ export class ProductFormComponent implements OnInit {
     this.loadCategories();
     this.loadCurrentUser();
 
-    // Subscribe to route params
     this.route.paramMap.subscribe((params) => {
       const id = params.get('id');
       if (id) {
         this.productId = id;
         this.isEditMode = true;
         this.loadProductForEdit(id);
+      }
+    });
+
+    this.vendorService.getVendorProfile().subscribe((data: any) => {
+      if (data?.user?.isAccepted !== undefined) {
+        this.isAccepted = data.user.isAccepted;
       }
     });
   }
@@ -89,10 +98,10 @@ export class ProductFormComponent implements OnInit {
         discounted: [false],
       }),
       measurement: this.fb.group({
-        width: [null],
-        height: [null],
-        depth: [null],
-        length: [null],
+        width: [0],
+        height: [0],
+        depth: [0],
+        length: [0],
         unit: ['cm', Validators.required],
       }),
       typeName: this.fb.group({
@@ -100,15 +109,15 @@ export class ProductFormComponent implements OnInit {
         ar: ['', Validators.required],
       }),
       contextualImageUrl: ['', Validators.pattern(/https?:\/\/.+/)],
-      images: ['', Validators.required], // Textarea for multiple URLs
+      images: ['', Validators.required],
       short_description: this.fb.group({
         en: ['', Validators.required],
         ar: ['', Validators.required],
       }),
       product_details: this.fb.group({
         product_details_paragraphs: this.fb.group({
-          en: [''], // Textarea for multiple paragraphs
-          ar: [''], // Textarea for multiple paragraphs
+          en: [''],
+          ar: [''],
         }),
         expandable_sections: this.fb.group({
           materials_and_care: this.fb.group({
@@ -144,7 +153,6 @@ export class ProductFormComponent implements OnInit {
         value: [null],
         unit: ['kg'],
       }),
-      fullUrl: [''],
     });
 
     // Add custom validator for measurement (at least one field required)
@@ -355,10 +363,8 @@ export class ProductFormComponent implements OnInit {
       inStock: product.inStock !== undefined ? product.inStock : true,
       stockQuantity: product.stockQuantity || 0,
       weight: product.weight || { value: null, unit: 'kg' },
-      fullUrl: product.fullUrl || '',
     });
 
-    // Handle variants if they exist
     if (product.variants && product.variants.length > 0) {
       this.showVariantsSection = true;
       this.variantsArray.clear();
