@@ -10,7 +10,7 @@
                 <div >
                     <p class="orderHeader">GENERAL</p>
                     <div class="general">
-                        <p >Payment via: {{order?.paymentMethod|uppercase}}</p>
+                        <p >Payment Id: {{order?.paymentId}}</p>
                         <p >Date: {{order?.createdAt|date:'mediumDate'}}</p>
                         <p >Status: <span class="status" [class]='order?.status'>{{order?.status}}</span></p>
                     </div>
@@ -49,7 +49,7 @@
                     <tbody>
                        @for (prd of items; track $index) {
                            <tr> 
-                               <td><img [src]="prd.prdID.image" alt="product image" class="img-fluid me-2" style="width: 30px;">{{prd.prdID.name}}</td>
+                               <td><img [src]="prd.prdID.images[0]" alt="product image" class="img-fluid me-2" style="width: 30px;">{{prd.prdID.name}}</td>
                                <td>{{prd.prdID.price.currentPrice}}</td>
                                <td>x {{prd.quantity}}</td>
                                <td>{{prd.quantity*prd.prdID.price.currentPrice}}</td>
@@ -62,7 +62,7 @@
         <div class="order-total border my-3 h-100">
             <div class="pt-2 px-3" >
                 <p class="orderHeader">ORDER TOTALS</p>
-                <h5>{{order?.subTotal|currency}}</h5>
+                <h5>{{order?.total|currency:'EGP'}}</h5>
             </div>
             <hr style="border: 1px solid rgb(139, 139, 139);" class="m-3">
             <div class="pt-2 px-3" >
