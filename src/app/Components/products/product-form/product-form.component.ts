@@ -17,6 +17,8 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { VariantManagementComponent } from '../../variants/variant-management.component';
 import { IVariant } from '../../../Models/ivariant';
 import { VendorProfileService } from '../../../Services/vendor-profile.service';
+import { DragDropBoxComponent } from '../../dragDrop-box/dragDrop-box.component';
+import { CloudinaryUploadService } from '../../../Services/cloudinary-upload.service';
 
 export type ProductFormData = IProduct;
 
@@ -28,9 +30,10 @@ export type ProductFormData = IProduct;
     CommonModule,
     MatSnackBarModule,
     VariantManagementComponent,
+    DragDropBoxComponent,
   ],
   templateUrl: './product-form.component.html',
-  styleUrls: ['./product-form.component.scss'],
+  styleUrls: ['./product-form.component.css'],
 })
 export class ProductFormComponent implements OnInit {
   @Input() initialData?: IProduct | null;
@@ -50,6 +53,8 @@ export class ProductFormComponent implements OnInit {
   currentUserId = '';
   variants: any[] = [];
   isAccepted = true;
+  mainImages: string[] = [];
+  contextualImage: string[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -57,7 +62,8 @@ export class ProductFormComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private snackBar: MatSnackBar,
-    private vendorService: VendorProfileService
+    private vendorService: VendorProfileService,
+    private cloudinaryService: CloudinaryUploadService // Add this
   ) {}
 
   get variantsArray() {
@@ -314,18 +320,10 @@ export class ProductFormComponent implements OnInit {
   }
 
   populateForm(product: IProduct): void {
-    // Convert images array to textarea format
-    const imagesText = product.images ? product.images.join('\n') : '';
+    // Set images arrays directly
+    this.mainImages = product.images || [];
+    this.contextualImage = product.contextualImageUrl ? [product.contextualImageUrl] : [];
 
-    // Convert product details paragraphs to textarea format
-    const enParagraphsText = this.arrayToTextarea(
-      product.product_details?.product_details_paragraphs?.en
-    );
-    const arParagraphsText = this.arrayToTextarea(
-      product.product_details?.product_details_paragraphs?.ar
-    );
-
-    // Populate form with product data
     this.productForm.patchValue({
       name: product.name || '',
       color: product.color || { en: '', ar: '' },
@@ -343,12 +341,16 @@ export class ProductFormComponent implements OnInit {
       },
       typeName: product.typeName || { en: '', ar: '' },
       contextualImageUrl: product.contextualImageUrl || '',
-      images: imagesText,
+      images: this.mainImages,
       short_description: product.short_description || { en: '', ar: '' },
       product_details: {
         product_details_paragraphs: {
-          en: enParagraphsText,
-          ar: arParagraphsText,
+          en: this.arrayToTextarea(
+            product.product_details?.product_details_paragraphs?.en
+          ),
+          ar: this.arrayToTextarea(
+            product.product_details?.product_details_paragraphs?.ar
+          ),
         },
         expandable_sections: product.product_details?.expandable_sections || {
           materials_and_care: { en: '', ar: '' },
@@ -388,82 +390,51 @@ export class ProductFormComponent implements OnInit {
 
     this.showProductDetailsSection = !!(
       product.product_details &&
-      (enParagraphsText ||
-        arParagraphsText ||
+      (this.arrayToTextarea(
+        product.product_details.product_details_paragraphs.en
+      ) ||
+        this.arrayToTextarea(
+          product.product_details.product_details_paragraphs.ar
+        ) ||
         Object.values(product.product_details.expandable_sections || {}).some(
           (section) => section.en || section.ar
         ))
     );
   }
 
-  // onSubmit(): void {
-  //   if (this.productForm.invalid) {
-  //     this.markFormGroupTouched(this.productForm);
-  //     this.showError('Please fill in all required fields');
-  //     return;
-  //   }
+  async onMainImagesUploaded(input: File[] | string[]) {
+    try {
+      this.isLoading = true;
+      if (input instanceof Array && input[0] instanceof File) {
+        const urls = await this.cloudinaryService.uploadImages(input as File[]);
+        this.mainImages = [...this.mainImages, ...urls]; // Update mainImages array
+      } else {
+        this.mainImages = [...this.mainImages, ...(input as string[])];
+      }
+      this.productForm.patchValue({ images: this.mainImages });
+      this.isLoading = false;
+    } catch (error) {
+      this.showError('Failed to upload images');
+      this.isLoading = false;
+    }
+  }
 
-  //   this.isLoading = true;
-  //   const formData = this.prepareFormData();
-
-  //   if (this.isEditMode && this.productId) {
-  //     this.updateProduct(formData);
-  //   } else {
-  //     this.createProduct(formData);
-  //   }
-  // }
-
-  // // Update prepareFormData to properly handle all fields
-  // prepareFormData(): Partial<IProduct> {
-  //   const formValue = this.productForm.value;
-  //   const images = this.textareaToArray(formValue.images);
-
-  //   const productData: Partial<IProduct> = {
-  //     name: formValue.name,
-  //     color: formValue.color,
-  //     price: formValue.price,
-  //     typeName: formValue.typeName,
-  //     images: images,
-  //     short_description: formValue.short_description,
-  //     vendorId: formValue.vendorId,
-  //     categoryId: formValue.categoryId,
-  //     inStock: formValue.inStock,
-  //     stockQuantity: formValue.stockQuantity,
-  //     variants: this.variants || [],
-  //     // Add measurement if section is shown
-  //     ...(this.showMeasurementSection && {
-  //       measurement: {
-  //         unit: formValue.measurement.unit,
-  //         width: formValue.measurement.width || undefined,
-  //         height: formValue.measurement.height || undefined,
-  //         depth: formValue.measurement.depth || undefined,
-  //         length: formValue.measurement.length || undefined
-  //       }
-  //     }),
-  //     // Add weight if section is shown
-  //     ...(this.showWeightSection && formValue.weight.value && {
-  //       weight: formValue.weight
-  //     }),
-  //     // Add product details if section is shown
-  //     ...(this.showProductDetailsSection && {
-  //       product_details: {
-  //         product_details_paragraphs: {
-  //           en: this.textareaToArray(formValue.product_details.product_details_paragraphs.en),
-  //           ar: this.textareaToArray(formValue.product_details.product_details_paragraphs.ar)
-  //         },
-  //         expandable_sections: formValue.product_details.expandable_sections
-  //       }
-  //     }),
-  //     // Add contextual image URL if provided
-  //     ...(formValue.contextualImageUrl && {
-  //       contextualImageUrl: formValue.contextualImageUrl
-  //     })
-  //   };
-
-  //   return productData;
-  // }
-
-  // Add helper method for form validation messages
+  async onContextualImageUploaded(input: File[] | string[]) {
+    try {
+      this.isLoading = true;
+      if (input instanceof Array && input[0] instanceof File) {
+        const urls = await this.cloudinaryService.uploadImages(input as File[]);
+        this.contextualImage = [urls[0]];
+      } else {
+        this.contextualImage = [input[0] as string];
+      }
+      this.productForm.patchValue({ contextualImageUrl: this.contextualImage[0] });
+      this.isLoading = false;
+    } catch (error) {
+      this.showError('Failed to upload contextual image');
+      this.isLoading = false;
+    }
+  }
 
   onSubmit(): void {
     if (this.productForm.valid) {
@@ -486,14 +457,14 @@ export class ProductFormComponent implements OnInit {
 
   prepareFormData(): Partial<IProduct> {
     const formValue = this.productForm.value;
-    const images = this.textareaToArray(formValue.images);
 
     const productData: Partial<IProduct> = {
       name: formValue.name,
       color: formValue.color,
       price: formValue.price,
       typeName: formValue.typeName,
-      images: images,
+      images: this.mainImages, // Use mainImages array directly
+      contextualImageUrl: this.contextualImage[0] || '', // Use first image from contextualImage array
       short_description: formValue.short_description,
       vendorId: formValue.vendorId,
       categoryId: formValue.categoryId,
@@ -697,5 +668,41 @@ export class ProductFormComponent implements OnInit {
   onVariantsChange(variants: IVariant[]) {
     this.variants = variants;
     this.productForm.patchValue({ variants: variants });
+  }
+
+  handleProductImagesUploaded(urls: string[]) {
+    const currentImages = this.productForm.get('images')?.value || [];
+    if (typeof currentImages === 'string') {
+      // Convert textarea value to array
+      const existingUrls = currentImages.split('\n').filter((url) => url.trim());
+      this.productForm.patchValue({
+        images: [...existingUrls, ...urls].join('\n'),
+      });
+    } else {
+      this.productForm.patchValue({
+        images: [...currentImages, ...urls].join('\n'),
+      });
+    }
+  }
+
+  handleProductImageRemoved(url: string) {
+    const currentImages = this.productForm.get('images')?.value || '';
+    const images = currentImages
+      .split('\n')
+      .filter((img: string) => img.trim() && img !== url);
+    this.mainImages = images;
+    this.productForm.patchValue({ contextualImageUrl: this.contextualImage[0] });
+  }
+
+  onMainImageRemoved(url: string) {
+    this.mainImages = this.mainImages.filter(img => img !== url);
+    this.productForm.patchValue({ images: this.mainImages });
+  }
+
+  onContextualImageRemoved(url: string) {
+    // Clear the contextual image array
+    this.contextualImage = [];
+    // Clear the contextualImageUrl in the form
+    this.productForm.patchValue({ contextualImageUrl: '' });
   }
 }

@@ -14,7 +14,12 @@ export const authInterceptor = (
   const router = inject(Router);
   const token = localStorage.getItem('token');
 
-  if (token) {
+  // Skip adding Authorization header for Cloudinary and other external APIs
+  const isExternalAPI =
+    request.url.includes('cloudinary.com') ||
+    request.url.includes('api.cloudinary.com');
+
+  if (token && !isExternalAPI) {
     request = request.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`,

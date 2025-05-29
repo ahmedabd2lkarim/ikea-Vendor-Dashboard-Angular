@@ -247,37 +247,30 @@
     <!-- Images Section -->
     <div class="form-section">
       <h3>Images</h3>
+      <!-- Main Product Images -->
       <div class="form-group">
-        <label for="images"
-          >Product Images <span class="required">*</span></label
-        >
-        <textarea
-          id="images"
-          formControlName="images"
-          class="form-control"
-          [class.error]="isFieldInvalid('images')"
-          placeholder="Enter image URLs, one per line"
-          rows="4"
-        ></textarea>
-        <small class="helper-text">Enter one image URL per line</small>
-        <div *ngIf="isFieldInvalid('images')" class="error-message">
-          {{ getFieldError("images") }}
-        </div>
+        <label>Product Images</label>
+        <app-dragDrop-box
+          [existingImages]="mainImages"
+          [acceptMultiple]="true"
+          [maxFiles]="5"
+          label="Drop product images here"
+          (imagesUploaded)="onMainImagesUploaded($event)"
+          (imageRemoved)="onMainImageRemoved($event)"
+        ></app-dragDrop-box>
       </div>
 
+      <!-- Contextual Image -->
       <div class="form-group">
-        <label for="contextualImageUrl">Contextual Image URL (Optional)</label>
-        <input
-          type="url"
-          id="contextualImageUrl"
-          formControlName="contextualImageUrl"
-          class="form-control"
-          [class.error]="isFieldInvalid('contextualImageUrl')"
-          placeholder="https://example.com/image.jpg"
-        />
-        <div *ngIf="isFieldInvalid('contextualImageUrl')" class="error-message">
-          {{ getFieldError("contextualImageUrl") }}
-        </div>
+        <label>Contextual Image</label>
+        <app-dragDrop-box
+          [existingImages]="contextualImage"
+          [acceptMultiple]="false"
+          [maxFiles]="1"
+          label="Drop contextual image here"
+          (imagesUploaded)="onContextualImageUploaded($event)"
+          (imageRemoved)="onContextualImageRemoved($event)"
+        ></app-dragDrop-box>
       </div>
     </div>
 
@@ -654,6 +647,7 @@
         </app-variant-management>
       </div>
     </div>
+
 
     <!-- Form Actions -->
     <div class="form-actions">

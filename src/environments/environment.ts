@@ -1,4 +1,4 @@
 export const environment = {
-  production: false,
-  baseURL: 'http://localhost:5000',
+  production: true,
+  baseURL: 'https://ikea-api-dqtp.onrender.com',
 };

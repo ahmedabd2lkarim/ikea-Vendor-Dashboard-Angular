@@ -1,0 +1,176 @@
+/* Add these classes to your existing CSS */
+
+.upload-button {
+    background: #0051ba;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.upload-button:hover:not(:disabled) {
+    background: #003d8f;
+    transform: translateY(-1px);
+}
+
+.upload-button:disabled {
+    background: #cbd5e0;
+    cursor: not-allowed;
+}
+
+.spinner {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.dropzone-container {
+  margin: 1rem 0;
+}
+
+ngx-dropzone {
+  min-height: 150px;
+  background: #f8f9fa;
+  border: 2px dashed #dee2e6;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+ngx-dropzone:hover {
+  border-color: #0d6efd;
+  background: #e9ecef;
+}
+
+.custom-dropzone {
+  position: relative;
+  padding: 1rem;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  background: #f8f9fa;
+  border: 2px dashed #dee2e6;
+}
+
+.custom-dropzone.dragging {
+  border-color: #0d6efd;
+  background: #e7f1ff;
+  transform: scale(1.02);
+}
+
+.dropzone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem;
+}
+
+.upload-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.preview-container {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.single-preview {
+  grid-template-columns: 1fr !important;
+  max-width: 300px;
+}
+
+.image-preview {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  aspect-ratio: 1;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease;
+}
+
+.image-preview:hover {
+  transform: translateY(-2px);
+}
+
+.image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-preview button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.9);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.image-preview button:hover {
+  background: #fff;
+  transform: scale(1.1);
+}
+
+.upload-button {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background: #0d6efd;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.upload-button:hover:not(:disabled) {
+  background: #0b5ed7;
+}
+
+.upload-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.loading-indicator {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+  margin-right: 0.5rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
