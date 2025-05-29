@@ -9,7 +9,7 @@ import { OrderStatus } from '../Models/order-status';
   providedIn: 'root',
 })
 export class CartService {
-  private baseURL = `${environment.baseURL}/api/cart`;
+  private baseURL = `${environment.baseURL}/api/orders`;
 
   constructor(private http: HttpClient) {}
 
