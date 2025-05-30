@@ -12,7 +12,7 @@
     </div>
     <nav class="navbar navbar-light navbar-custom">
         <div class="container-fluid d-flex justify-content-between align-items-center">
-            <span class="navbar-text me-3">Hi, {{vendorName}} </span>
+            <span class="navbar-text me-3">Hi, {{vendorName.substr(0,5)}} </span>
         </div>
     </nav>
     <button class="btn btn-outline-dark btn-logout" (click)="logout()">Logout</button>

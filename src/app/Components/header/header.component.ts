@@ -57,6 +57,7 @@ export class HeaderComponent implements OnInit {
     this.vendorService.getVendorProfile().subscribe({
       next: (data) => {
         this.vendorName = data.user.name;
+        this.vendorName=this.vendorName.substring(0, 5); // Limit to 10 characters
       },
       error: (error) => {
         console.error('Error fetching vendor data:', error);

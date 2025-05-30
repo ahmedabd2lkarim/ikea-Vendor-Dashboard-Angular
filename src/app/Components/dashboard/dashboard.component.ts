@@ -50,7 +50,7 @@ export class DashboardComponent implements OnInit {
 
   private calculateRevenue(orders: ICart[]) {
     this.totalRevenue = orders.reduce((total, order) => {
-      return total + (order.status !== OrderStatus.cancelled ? order.subTotal : 0);
+      return total + (order.status !== OrderStatus.cancelled ? order.total : 0);
     }, 0);
   }
 
