@@ -18,4 +18,6 @@ export interface IVariant {
   };
   contextualImageUrl?: string;
   images: string[];
+  inStock?: boolean;
+  stockQuantity?: number;
 }

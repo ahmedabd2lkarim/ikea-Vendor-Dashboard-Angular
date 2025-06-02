@@ -90,6 +90,8 @@ export class VariantManagementComponent implements OnInit {
         { validators: this.measurementValidator }
       ),
       images: this.fb.array([]),
+      inStock: [true],
+      stockQuantity: [0, [Validators.required, Validators.min(0)]],
     });
   }
 
@@ -135,12 +137,10 @@ export class VariantManagementComponent implements OnInit {
     this.showForm = true;
     this.editingVariantId = variant._id ?? null;
 
-    // Initialize images for this variant
     if (variant._id) {
       this.variantImages[variant._id] = [...(variant.images || [])];
     }
 
-    // Update form values
     this.variantForm.patchValue({
       color: variant.color,
       price: {
@@ -156,6 +156,8 @@ export class VariantManagementComponent implements OnInit {
         length: 0,
       },
       images: variant.images || [],
+      inStock: variant.inStock !== undefined ? variant.inStock : true,
+      stockQuantity: variant.stockQuantity || 0,
     });
 
     // Set measurement section visibility
@@ -189,6 +191,8 @@ export class VariantManagementComponent implements OnInit {
         length: 0,
       },
       images: [],
+      inStock: true,
+      stockQuantity: 0,
     });
   }
 
@@ -237,7 +241,6 @@ export class VariantManagementComponent implements OnInit {
     this.isLoading = true;
     const formValue = this.variantForm.value;
 
-    // Create variant data with images from variantImages object
     const variantData: Partial<IVariant> = {
       color: {
         en: formValue.color.en.trim(),
@@ -249,8 +252,14 @@ export class VariantManagementComponent implements OnInit {
         discounted: Boolean(formValue.price.discounted),
       },
     };
+    if (formValue.inStock) {
+      variantData.inStock = true;
+      variantData.stockQuantity = Number(formValue.stockQuantity) || 0;
+    } else {
+      variantData.inStock = false;
+      variantData.stockQuantity = 0;
+    }
 
-    // Add measurement only if section is shown and has values
     if (this.showMeasurementSection) {
       variantData.measurement = {
         unit: formValue.measurement.unit,
@@ -394,8 +403,6 @@ export class VariantManagementComponent implements OnInit {
         },
       });
     }
-
-   
   }
 
   private showSuccess(message: string) {
@@ -404,8 +411,6 @@ export class VariantManagementComponent implements OnInit {
       panelClass: ['success-snackbar'],
     });
   }
-
- 
 
   onVariantImageRemoved(variantId: string, url: string) {
     this.variantImages[variantId] = this.variantImages[variantId].filter(
