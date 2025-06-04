@@ -3,23 +3,23 @@ import { CartComponent } from './Components/cart/cart.component';
 import { OrderDetailsComponent } from './Components/order-details/order-details.component';
 import { VendorProfileComponent } from './Components/vendor-profile/vendor-profile.component';
 import { ProductsComponent } from './Components/products/products/products.component';
-import { ProductComponent } from './Components/product-details/product.component';
 import { DashboardComponent } from './Components/dashboard/dashboard.component';
 import { LoginComponent } from './Components/auth/login/login.component';
 import { RegisterComponent } from './Components/auth/register/register.component';
 import { authGuard } from './guards/auth.guard';
 import { ProductFormComponent } from './Components/products/product-form/product-form.component';
+import { ProductComponent } from './Components/product-details/product.component';
 
 export const routes: Routes = [
-  { 
-    path: 'login', 
+  {
+    path: 'login',
     component: LoginComponent,
-    title: 'Login'
+    title: 'Login',
   },
-  { 
-    path: 'register', 
+  {
+    path: 'register',
     component: RegisterComponent,
-    title: 'Register'
+    title: 'Register',
   },
   {
     path: 'orderDet/:ordID',
@@ -53,7 +53,7 @@ export const routes: Routes = [
   },
   {
     path: 'products/edit/:id',
-    component: ProductFormComponent
+    component: ProductFormComponent,
   },
   {
     path: 'products/new',

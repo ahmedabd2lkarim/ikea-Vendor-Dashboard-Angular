@@ -1,200 +1,71 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { IProduct } from '../../Models/iproduct';
 import { ProductsWithApiService } from '../../Services/products-with-api.service';
 import { Location } from '@angular/common';
-// import { VariantManagementComponent } from '../variants/variant-management.component';
-
+import { environment } from '../../../environments/environment';
+import { IVariant } from '../../Models/ivariant';
 @Component({
   selector: 'app-product',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <div class="product-container" *ngIf="product">
-      <button class="back-btn" (click)="goback()">← Back</button>
-      
-      <div class="product-header">
-        <h1>{{product.name}}</h1>
-        <div class="product-meta">
-          <p>Category: {{product.categoryName}}</p>
-          <p>Vendor: {{product.vendorName}}</p>
-        </div>
-      </div>
-
-      <div class="product-content">
-        <div class="product-images">
-          <img [src]="product.contextualImageUrl || product.images[0]" 
-               [alt]="product.imageAlt.en"
-               class="main-image">
-          <div class="image-gallery">
-            <img *ngFor="let img of product.images" 
-                 [src]="img" 
-                 [alt]="product.imageAlt.en"
-                 class="thumbnail">
-          </div>
-        </div>
-
-        <div class="product-info">
-          <div class="price-stock">
-            <h2>{{product.price.currency}} {{product.price.currentPrice}}</h2>
-            <span [class.out-of-stock]="!product.inStock">
-              {{product.inStock ? 'In Stock' : 'Out of Stock'}}
-              ({{product.stockQuantity}} available)
-            </span>
-          </div>
-
-          <div class="description">
-            <h3>Description</h3>
-            <p>{{product.short_description.en}}</p>
-          </div>
-
-          <div class="measurements" *ngIf="product.measurement">
-            <h3>Dimensions</h3>
-            <ul>
-              <li *ngIf="product.measurement.width">Width: {{product.measurement.width}}{{product.measurement.unit}}</li>
-              <li *ngIf="product.measurement.height">Height: {{product.measurement.height}}{{product.measurement.unit}}</li>
-              <li *ngIf="product.measurement.depth">Depth: {{product.measurement.depth}}{{product.measurement.unit}}</li>
-              <li *ngIf="product.measurement.length">Length: {{product.measurement.length}}{{product.measurement.unit}}</li>
-            </ul>
-          </div>
-
-          <div class="product-details">
-            <h3>Product Details</h3>
-            <div *ngFor="let para of product.product_details.product_details_paragraphs.en">
-              <p>{{para}}</p>
-            </div>
-
-            <div class="expandable-sections">
-              <details *ngIf="product.product_details.expandable_sections.materials_and_care.en">
-                <summary>Materials and Care</summary>
-                <p>{{product.product_details.expandable_sections.materials_and_care.en}}</p>
-              </details>
-
-              <details *ngIf="product.product_details.expandable_sections.details_certifications.en">
-                <summary>Details & Certifications</summary>
-                <p>{{product.product_details.expandable_sections.details_certifications.en}}</p>
-              </details>
-
-              <details *ngIf="product.product_details.expandable_sections.good_to_know.en">
-                <summary>Good to Know</summary>
-                <p>{{product.product_details.expandable_sections.good_to_know.en}}</p>
-              </details>
-
-              <details *ngIf="product.product_details.expandable_sections.safety_and_compliance.en">
-                <summary>Safety & Compliance</summary>
-                <p>{{product.product_details.expandable_sections.safety_and_compliance.en}}</p>
-              </details>
-
-              <details *ngIf="product.product_details.expandable_sections.assembly_and_documents.en">
-                <summary>Assembly & Documents</summary>
-                <p>{{product.product_details.expandable_sections.assembly_and_documents.en}}</p>
-              </details>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- <app-variant-management 
-        *ngIf="product" 
-        [productId]="product._id"
-        [variants]="product.variants">
-      </app-variant-management> -->
-    </div>
-  `,
-  styles: [`
-    .product-container {
-      padding: 2rem;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .back-btn {
-      margin-bottom: 2rem;
-      padding: 0.5rem 1rem;
-      background: none;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .product-header {
-      margin-bottom: 2rem;
-    }
-
-    .product-content {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2rem;
-    }
-
-    .product-images {
-      .main-image {
-        width: 100%;
-        height: auto;
-        margin-bottom: 1rem;
-      }
-
-      .image-gallery {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-        gap: 0.5rem;
-
-        .thumbnail {
-          width: 100%;
-          height: 80px;
-          object-fit: cover;
-          cursor: pointer;
-        }
-      }
-    }
-
-    .product-info {
-      .price-stock {
-        margin-bottom: 1rem;
-        
-        .out-of-stock {
-          color: #dc3545;
-        }
-      }
-
-      h3 {
-        margin: 1.5rem 0 0.5rem;
-      }
-    }
-
-    .expandable-sections {
-      details {
-        margin: 0.5rem 0;
-        padding: 0.5rem;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-
-        summary {
-          cursor: pointer;
-          padding: 0.5rem;
-          font-weight: 500;
-        }
-      }
-    }
-  `]
+  templateUrl: './product.component.html',
+  styleUrl: "./product.component.scss",
 })
 export class ProductComponent implements OnInit {
   product!: IProduct;
   productID: string = '';
   prdIDs: string[] = [];
+  selectedImage: string | null = null;
+  activeTab: string = 'materials_and_care';
+  switchTab(tabKey: string): void {
+    this.activeTab = tabKey;
+  }
+  productSections = [
+    {
+      key: 'materials_and_care',
+      title: 'Materials and Care',
+      icon: 'fas fa-tshirt',
+      isOpen: false,
+    },
+    {
+      key: 'details_certifications',
+      title: 'Details & Certifications',
+      icon: 'fas fa-certificate',
+      isOpen: false,
+    },
+    {
+      key: 'good_to_know',
+      title: 'Good to Know',
+      icon: 'fas fa-lightbulb',
+      isOpen: false,
+    },
+    {
+      key: 'safety_and_compliance',
+      title: 'Safety & Compliance',
+      icon: 'fas fa-shield-alt',
+      isOpen: false,
+    },
+    {
+      key: 'assembly_and_documents',
+      title: 'Assembly & Documents',
+      icon: 'fas fa-tools',
+      isOpen: false,
+    },
+  ];
 
   constructor(
     private productsWithApi: ProductsWithApiService,
     private activatedroute: ActivatedRoute,
-    private location: Location
+    private location: Location,
+    private router: Router
   ) {}
   ngOnInit(): void {
-    // get current prdID
     this.activatedroute.paramMap.subscribe((param) => {
       this.productID = param.get('prdID') || '';
+      this.activeTab = this.productSections[0].key;
     });
-    //get ids of products
     this.productsWithApi.getAllProducts().subscribe({
       next: (data) => {
         this.prdIDs = data.map((prd) => prd._id);
@@ -207,6 +78,87 @@ export class ProductComponent implements OnInit {
       },
     });
   }
+
+  selectImage(img: string): void {
+    this.selectedImage = img;
+  }
+
+  toggleSection(key: string): void {
+    const section = this.productSections.find((s) => s.key === key);
+    if (section) {
+      section.isOpen = !section.isOpen;
+    }
+  }
+
+  getSection(key: string): string {
+    return (
+      this.product?.product_details?.expandable_sections[
+        key as keyof typeof this.product.product_details.expandable_sections
+      ]?.en || ''
+    );
+  }
+  getCurrentSection() {
+    return this.productSections.find(
+      (section) => section.key === this.activeTab
+    );
+  }
+
+  calculateDiscount(price: {
+    originalPrice?: number;
+    currentPrice: number;
+  }): number {
+    if (!price.originalPrice) return 0;
+    const discount =
+      ((price.originalPrice - price.currentPrice) / price.originalPrice) * 100;
+    return Math.round(discount);
+  }
+  editProduct(): void {
+    this.router.navigate(['/products/edit', this.productID]);
+  }
+  viewOnWebsite(): void {
+    const url = `${environment.clientURL}/productDetails/${this.productID}`;
+    window.open(url, '_blank');
+  }
+
+  getStockStatusClass(variant: IVariant): string {
+    if (
+      !variant.inStock ||
+      (variant.stockQuantity !== undefined && variant.stockQuantity <= 0)
+    ) {
+      return 'out-of-stock';
+    }
+    if (variant.stockQuantity !== undefined && variant.stockQuantity < 10) {
+      return 'low-stock';
+    }
+    return 'in-stock';
+  }
+
+  getStockStatusIcon(variant: IVariant): string {
+    if (
+      !variant.inStock ||
+      (variant.stockQuantity !== undefined && variant.stockQuantity <= 0)
+    ) {
+      return 'fas fa-times-circle';
+    }
+    if (variant.stockQuantity !== undefined && variant.stockQuantity < 10) {
+      return 'fas fa-exclamation-circle';
+    }
+    return 'fas fa-check-circle';
+  }
+
+  getStockStatusText(variant: IVariant): string {
+    if (
+      !variant.inStock ||
+      (variant.stockQuantity !== undefined && variant.stockQuantity <= 0)
+    ) {
+      return 'Out of Stock';
+    }
+    if (variant.stockQuantity !== undefined && variant.stockQuantity < 10) {
+      return `Low Stock (${variant.stockQuantity} left)`;
+    }
+    return `In Stock (${variant.stockQuantity} units)`;
+  }
+
   goback() {
     this.location.back();
   }

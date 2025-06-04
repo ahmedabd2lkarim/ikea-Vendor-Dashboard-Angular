@@ -1,6 +1,9 @@
 <div class="product-form-container">
   <div class="form-header">
-    <h2>{{ isEditMode ? "Edit Product" : "Add New Product" }}</h2>
+    <div class="header-content">
+      <h1 class="form-title">{{ isEditMode ? "Edit Product" : "Add New Product" }}</h1>
+      <p class="form-subtitle">{{ isEditMode ? "Update your product information" : "Create a new product in your catalog" }}</p>
+    </div>
   </div>
 
   <form
@@ -9,175 +12,199 @@
     (ngSubmit)="onSubmit()"
     class="product-form"
   >
-    <div *ngIf="isLoading" class="loading-spinner">
-      <div class="spinner"></div>
-      <p>{{ isEditMode ? "Loading product..." : "Saving product..." }}</p>
+    <!-- Loading Overlay -->
+    <div *ngIf="isLoading" class="loading-overlay">
+      <div class="loading-content">
+        <div class="spinner"></div>
+        <p class="loading-text">{{ isEditMode ? "Loading product..." : "Saving product..." }}</p>
+      </div>
     </div>
 
     <!-- Basic Information Section -->
     <div class="form-section">
-      <h3>Basic Information</h3>
-
-      <!-- Product Name -->
-      <div class="form-group">
-        <label for="name">Product Name <span class="required">*</span></label>
-        <input
-          type="text"
-          id="name"
-          formControlName="name"
-          class="form-control"
-          [class.error]="isFieldInvalid('name')"
-          placeholder="Enter product name"
-        />
-        <div *ngIf="isFieldInvalid('name')" class="error-message">
-          {{ getFieldError("name") }}
-        </div>
+      <div class="section-header">
+        <h2 class="section-title">Basic Information</h2>
+        <p class="section-description">Essential product details and identifiers</p>
       </div>
 
-      <!-- Color -->
-      <div class="form-group">
-        <label>Color <span class="required">*</span></label>
-        <div formGroupName="color" class="bilingual-fields">
-          <div class="field-group">
-            <label for="color-en">English</label>
-            <input
-              type="text"
-              id="color-en"
-              formControlName="en"
-              class="form-control"
-              [class.error]="isFieldInvalid('color.en')"
-              placeholder="Color in English"
-            />
-            <div *ngIf="isFieldInvalid('color.en')" class="error-message">
-              {{ getFieldError("color.en") }}
-            </div>
-          </div>
-          <div class="field-group">
-            <label for="color-ar">Arabic</label>
-            <input
-              type="text"
-              id="color-ar"
-              formControlName="ar"
-              class="form-control"
-              [class.error]="isFieldInvalid('color.ar')"
-              placeholder="اللون بالعربية"
-              dir="rtl"
-            />
-            <div *ngIf="isFieldInvalid('color.ar')" class="error-message">
-              {{ getFieldError("color.ar") }}
-            </div>
+      <div class="form-grid">
+        <!-- Product Name -->
+        <div class="form-group full-width">
+          <label for="name" class="form-label">
+            Product Name 
+            <span class="required-indicator">*</span>
+          </label>
+          <input
+            type="text"
+            id="name"
+            formControlName="name"
+            class="form-input"
+            [class.error]="isFieldInvalid('name')"
+            placeholder="Enter product name"
+          />
+          <div *ngIf="isFieldInvalid('name')" class="error-message">
+            {{ getFieldError("name") }}
           </div>
         </div>
-      </div>
 
-      <!-- Type Name -->
-      <div class="form-group">
-        <label>Type Name <span class="required">*</span></label>
-        <div formGroupName="typeName" class="bilingual-fields">
-          <div class="field-group">
-            <label for="typeName-en">English</label>
-            <input
-              type="text"
-              id="typeName-en"
-              formControlName="en"
-              class="form-control"
-              [class.error]="isFieldInvalid('typeName.en')"
-              placeholder="Type name in English"
-            />
-            <div *ngIf="isFieldInvalid('typeName.en')" class="error-message">
-              {{ getFieldError("typeName.en") }}
+        <!-- Color Fields -->
+        <div class="form-group full-width">
+          <label class="form-label">
+            Color 
+            <span class="required-indicator">*</span>
+          </label>
+          <div formGroupName="color" class="bilingual-grid">
+            <div class="field-wrapper">
+              <label for="color-en" class="field-label">English</label>
+              <input
+                type="text"
+                id="color-en"
+                formControlName="en"
+                class="form-input"
+                [class.error]="isFieldInvalid('color.en')"
+                placeholder="Color in English"
+              />
+              <div *ngIf="isFieldInvalid('color.en')" class="error-message">
+                {{ getFieldError("color.en") }}
+              </div>
             </div>
-          </div>
-          <div class="field-group">
-            <label for="typeName-ar">Arabic</label>
-            <input
-              type="text"
-              id="typeName-ar"
-              formControlName="ar"
-              class="form-control"
-              [class.error]="isFieldInvalid('typeName.ar')"
-              placeholder="نوع المنتج بالعربية"
-              dir="rtl"
-            />
-            <div *ngIf="isFieldInvalid('typeName.ar')" class="error-message">
-              {{ getFieldError("typeName.ar") }}
+            <div class="field-wrapper">
+              <label for="color-ar" class="field-label">العربية</label>
+              <input
+                type="text"
+                id="color-ar"
+                formControlName="ar"
+                class="form-input rtl"
+                [class.error]="isFieldInvalid('color.ar')"
+                placeholder="اللون بالعربية"
+                dir="rtl"
+              />
+              <div *ngIf="isFieldInvalid('color.ar')" class="error-message">
+                {{ getFieldError("color.ar") }}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Short Description -->
-      <div class="form-group">
-        <label>Short Description <span class="required">*</span></label>
-        <div formGroupName="short_description" class="bilingual-fields">
-          <div class="field-group">
-            <label for="shortDesc-en">English</label>
-            <textarea
-              id="shortDesc-en"
-              formControlName="en"
-              class="form-control"
-              [class.error]="isFieldInvalid('short_description.en')"
-              placeholder="Short description in English"
-              rows="3"
-            ></textarea>
-            <div
-              *ngIf="isFieldInvalid('short_description.en')"
-              class="error-message"
-            >
-              {{ getFieldError("short_description.en") }}
+        <!-- Type Name Fields -->
+        <div class="form-group full-width">
+          <label class="form-label">
+            Type Name 
+            <span class="required-indicator">*</span>
+          </label>
+          <div formGroupName="typeName" class="bilingual-grid">
+            <div class="field-wrapper">
+              <label for="typeName-en" class="field-label">English</label>
+              <input
+                type="text"
+                id="typeName-en"
+                formControlName="en"
+                class="form-input"
+                [class.error]="isFieldInvalid('typeName.en')"
+                placeholder="Type name in English"
+              />
+              <div *ngIf="isFieldInvalid('typeName.en')" class="error-message">
+                {{ getFieldError("typeName.en") }}
+              </div>
             </div>
-          </div>
-          <div class="field-group">
-            <label for="shortDesc-ar">Arabic</label>
-            <textarea
-              id="shortDesc-ar"
-              formControlName="ar"
-              class="form-control"
-              [class.error]="isFieldInvalid('short_description.ar')"
-              placeholder="وصف مختصر بالعربية"
-              dir="rtl"
-              rows="3"
-            ></textarea>
-            <div
-              *ngIf="isFieldInvalid('short_description.ar')"
-              class="error-message"
-            >
-              {{ getFieldError("short_description.ar") }}
+            <div class="field-wrapper">
+              <label for="typeName-ar" class="field-label">العربية</label>
+              <input
+                type="text"
+                id="typeName-ar"
+                formControlName="ar"
+                class="form-input rtl"
+                [class.error]="isFieldInvalid('typeName.ar')"
+                placeholder="نوع المنتج بالعربية"
+                dir="rtl"
+              />
+              <div *ngIf="isFieldInvalid('typeName.ar')" class="error-message">
+                {{ getFieldError("typeName.ar") }}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Category -->
-      <div class="form-group">
-        <label for="categoryId">Category <span class="required">*</span></label>
-        <select
-          id="categoryId"
-          formControlName="categoryId"
-          class="form-control"
-          [class.error]="isFieldInvalid('categoryId')"
-        >
-          <option value="">Select a category</option>
-          <option *ngFor="let category of categories" [value]="category._id">
-            {{ category.name }}
-          </option>
-        </select>
-        <div *ngIf="isFieldInvalid('categoryId')" class="error-message">
-          {{ getFieldError("categoryId") }}
+        <!-- Short Description Fields -->
+        <div class="form-group full-width">
+          <label class="form-label">
+            Short Description 
+            <span class="required-indicator">*</span>
+          </label>
+          <div formGroupName="short_description" class="bilingual-grid">
+            <div class="field-wrapper">
+              <label for="shortDesc-en" class="field-label">English</label>
+              <textarea
+                id="shortDesc-en"
+                formControlName="en"
+                class="form-textarea"
+                [class.error]="isFieldInvalid('short_description.en')"
+                placeholder="Short description in English"
+                rows="3"
+              ></textarea>
+              <div *ngIf="isFieldInvalid('short_description.en')" class="error-message">
+                {{ getFieldError("short_description.en") }}
+              </div>
+            </div>
+            <div class="field-wrapper">
+              <label for="shortDesc-ar" class="field-label">العربية</label>
+              <textarea
+                id="shortDesc-ar"
+                formControlName="ar"
+                class="form-textarea rtl"
+                [class.error]="isFieldInvalid('short_description.ar')"
+                placeholder="وصف مختصر بالعربية"
+                dir="rtl"
+                rows="3"
+              ></textarea>
+              <div *ngIf="isFieldInvalid('short_description.ar')" class="error-message">
+                {{ getFieldError("short_description.ar") }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Category -->
+        <div class="form-group">
+          <label for="categoryId" class="form-label">
+            Category 
+            <span class="required-indicator">*</span>
+          </label>
+          <select
+            id="categoryId"
+            formControlName="categoryId"
+            class="form-select"
+            [class.error]="isFieldInvalid('categoryId')"
+          >
+            <option value="">Select a category</option>
+            <option *ngFor="let category of categories" [value]="category._id">
+              {{ category.name }}
+            </option>
+          </select>
+          <div *ngIf="isFieldInvalid('categoryId')" class="error-message">
+            {{ getFieldError("categoryId") }}
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Price Section -->
+    <!-- Pricing Section -->
     <div class="form-section">
-      <h3>Pricing</h3>
-      <div formGroupName="price" class="price-fields">
+      <div class="section-header">
+        <h2 class="section-title">Pricing</h2>
+        <p class="section-description">Set your product pricing and discount options</p>
+      </div>
+
+      <div formGroupName="price" class="form-grid">
         <div class="form-group">
-          <label for="currency">Currency <span class="required">*</span></label>
+          <label for="currency" class="form-label">
+            Currency 
+            <span class="required-indicator">*</span>
+          </label>
           <select
             id="currency"
             formControlName="currency"
-            class="form-control"
+            class="form-select"
             [class.error]="isFieldInvalid('price.currency')"
           >
             <option value="EGP">EGP</option>
@@ -186,30 +213,31 @@
             {{ getFieldError("price.currency") }}
           </div>
         </div>
+
         <div class="form-group">
-          <label for="currentPrice"
-            >Current Price <span class="required">*</span></label
-          >
+          <label for="currentPrice" class="form-label">
+            Current Price 
+            <span class="required-indicator">*</span>
+          </label>
           <input
             type="number"
             id="currentPrice"
             formControlName="currentPrice"
-            class="form-control" 
+            class="form-input"
             min="100"
             [class.error]="isFieldInvalid('price.currentPrice')"
             placeholder="0"
           />
-          <div
-            *ngIf="isFieldInvalid('price.currentPrice')"
-            class="error-message"
-          >
+          <div *ngIf="isFieldInvalid('price.currentPrice')" class="error-message">
             {{ getFieldError("price.currentPrice") }}
           </div>
         </div>
-        <div class="form-group checkbox">
+
+        <div class="form-group checkbox-group">
           <label class="checkbox-label">
-            <input type="checkbox" formControlName="discounted" />
-            Discounted
+            <input type="checkbox" formControlName="discounted" class="checkbox-input" />
+            <span class="checkbox-custom"></span>
+            <span class="checkbox-text">Discounted</span>
           </label>
         </div>
       </div>
@@ -217,23 +245,30 @@
 
     <!-- Stock Information -->
     <div class="form-section">
-      <h3>Stock Information</h3>
-      <div class="stock-fields">
-        <div class="form-group checkbox">
+      <div class="section-header">
+        <h2 class="section-title">Stock Information</h2>
+        <p class="section-description">Manage inventory and stock levels</p>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group checkbox-group">
           <label class="checkbox-label">
-            <input type="checkbox" formControlName="inStock" />
-            In Stock
+            <input type="checkbox" formControlName="inStock" class="checkbox-input" />
+            <span class="checkbox-custom"></span>
+            <span class="checkbox-text">In Stock</span>
           </label>
         </div>
+
         <div class="form-group">
-          <label for="stockQuantity"
-            >Stock Quantity <span class="required">*</span></label
-          >
+          <label for="stockQuantity" class="form-label">
+            Stock Quantity 
+            <span class="required-indicator">*</span>
+          </label>
           <input
             type="number"
             id="stockQuantity"
             formControlName="stockQuantity"
-            class="form-control"
+            class="form-input"
             [class.error]="isFieldInvalid('stockQuantity')"
             placeholder="0"
             min="0"
@@ -247,158 +282,154 @@
 
     <!-- Images Section -->
     <div class="form-section">
-      <h3>Images</h3>
-      <!-- Main Product Images -->
-      <div class="form-group">
-        <label>Product Images</label>
-        <app-dragDrop-box
-          [existingImages]="mainImages"
-          [acceptMultiple]="true"
-          [maxFiles]="5"
-          label="Drop product images here"
-          (imagesUploaded)="onMainImagesUploaded($event)"
-          (imageRemoved)="onMainImageRemoved($event)"
-        ></app-dragDrop-box>
+      <div class="section-header">
+        <h2 class="section-title">Images</h2>
+        <p class="section-description">Upload product images and contextual photos</p>
       </div>
 
-      <!-- Contextual Image -->
-      <div class="form-group">
-        <label>Contextual Image</label>
-        <app-dragDrop-box
-          [existingImages]="contextualImage"
-          [acceptMultiple]="false"
-          [maxFiles]="1"
-          label="Drop contextual image here"
-          (imagesUploaded)="onContextualImageUploaded($event)"
-          (imageRemoved)="onContextualImageRemoved($event)"
-        ></app-dragDrop-box>
+      <div class="form-grid">
+        <!-- Main Product Images -->
+        <div class="form-group full-width">
+          <label class="form-label">Product Images</label>
+          <app-dragDrop-box
+            [existingImages]="mainImages"
+            [acceptMultiple]="true"
+            [maxFiles]="5"
+            label="Drop product images here"
+            (imagesUploaded)="onMainImagesUploaded($event)"
+            (imageRemoved)="onMainImageRemoved($event)"
+          ></app-dragDrop-box>
+        </div>
+
+        <!-- Contextual Image -->
+        <div class="form-group full-width">
+          <label class="form-label">Contextual Image</label>
+          <app-dragDrop-box
+            [existingImages]="contextualImage"
+            [acceptMultiple]="false"
+            [maxFiles]="1"
+            label="Drop contextual image here"
+            (imagesUploaded)="onContextualImageUploaded($event)"
+            (imageRemoved)="onContextualImageRemoved($event)"
+          ></app-dragDrop-box>
+        </div>
       </div>
     </div>
 
-    <div class="form-section">
-      <div class="section-toggle">
-        <button
-          type="button"
-          class="toggle-btn"
-          (click)="toggleMeasurementSection()"
-        >
-          <span class="toggle-icon" [class.expanded]="showMeasurementSection"
-            >▼</span
-          >
-          Measurements
+    <!-- Measurements Section -->
+    <div class="form-section collapsible">
+      <div class="section-toggle" (click)="toggleMeasurementSection()">
+        <div class="toggle-header">
+          <h2 class="section-title">Measurements</h2>
+          <p class="section-description">Product dimensions and size details</p>
+        </div>
+        <button type="button" class="toggle-btn" [class.expanded]="showMeasurementSection">
+          <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <polyline points="6,9 12,15 18,9"></polyline>
+          </svg>
         </button>
       </div>
 
-      <div
-        *ngIf="showMeasurementSection"
-        class="collapsible-content"
-        formGroupName="measurement"
-      >
-        <div class="measurement-fields">
+      <div *ngIf="showMeasurementSection" class="collapsible-content" formGroupName="measurement">
+        <div class="form-grid">
           <div class="form-group">
-            <label for="width">Width</label>
+            <label for="width" class="form-label">Width</label>
             <input
               type="number"
               id="width"
               formControlName="width"
-              class="form-control"
+              class="form-input"
               placeholder="0"
               min="0"
             />
           </div>
+
           <div class="form-group">
-            <label for="height">Height</label>
+            <label for="height" class="form-label">Height</label>
             <input
               type="number"
               id="height"
               formControlName="height"
-              class="form-control"
+              class="form-input"
               placeholder="0"
               min="0"
             />
           </div>
+
           <div class="form-group">
-            <label for="depth">Depth</label>
+            <label for="depth" class="form-label">Depth</label>
             <input
               type="number"
               id="depth"
               formControlName="depth"
-              class="form-control"
+              class="form-input"
               placeholder="0"
               min="0"
             />
           </div>
+
           <div class="form-group">
-            <label for="length">Length</label>
+            <label for="length" class="form-label">Length</label>
             <input
               type="number"
               id="length"
               formControlName="length"
-              class="form-control"
+              class="form-input"
               placeholder="0"
               min="0"
             />
           </div>
+
           <div class="form-group">
-            <label for="measurement-unit"
-              >Unit <span class="required">*</span></label
-            >
-            <select
-              id="measurement-unit"
-              formControlName="unit"
-              class="form-control"
-            >
+            <label for="measurement-unit" class="form-label">
+              Unit 
+              <span class="required-indicator">*</span>
+            </label>
+            <select id="measurement-unit" formControlName="unit" class="form-select">
               <option *ngFor="let unit of measurementUnits" [value]="unit">
                 {{ unit }}
               </option>
             </select>
           </div>
         </div>
+
         <div *ngIf="isMeasurementSectionInvalid()" class="error-message">
-          At least one measurement field is required when this section is
-          enabled
+          At least one measurement field is required when this section is enabled
         </div>
       </div>
     </div>
 
-    <div class="form-section">
-      <div class="section-toggle">
-        <button
-          type="button"
-          class="toggle-btn"
-          (click)="toggleWeightSection()"
-        >
-          <span class="toggle-icon" [class.expanded]="showWeightSection"
-            >▼</span
-          >
-          Weight 
+    <!-- Weight Section -->
+    <div class="form-section collapsible">
+      <div class="section-toggle" (click)="toggleWeightSection()">
+        <div class="toggle-header">
+          <h2 class="section-title">Weight</h2>
+          <p class="section-description">Product weight specifications</p>
+        </div>
+        <button type="button" class="toggle-btn" [class.expanded]="showWeightSection">
+          <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <polyline points="6,9 12,15 18,9"></polyline>
+          </svg>
         </button>
       </div>
 
-      <div
-        *ngIf="showWeightSection"
-        class="collapsible-content"
-        formGroupName="weight"
-      >
-        <div class="weight-fields">
+      <div *ngIf="showWeightSection" class="collapsible-content" formGroupName="weight">
+        <div class="form-grid">
           <div class="form-group">
-            <label for="weight-value">Weight Value</label>
+            <label for="weight-value" class="form-label">Weight Value</label>
             <input
               type="number"
               id="weight-value"
               formControlName="value"
-              class="form-control"
+              class="form-input"
               placeholder="0"
               min="0"
             />
           </div>
+
           <div class="form-group">
-            <label for="weight-unit">Unit</label>
-            <select
-              id="weight-unit"
-              formControlName="unit"
-              class="form-control"
-            >
+            <label for="weight-unit" class="form-label">Unit</label>
+            <select id="weight-unit" formControlName="unit" class="form-select">
               <option *ngFor="let unit of weightUnits" [value]="unit">
                 {{ unit }}
               </option>
@@ -408,84 +439,75 @@
       </div>
     </div>
 
-    <div class="form-section">
-      <div class="section-toggle">
-        <button
-          type="button"
-          class="toggle-btn"
-          (click)="toggleProductDetailsSection()"
-        >
-          <span class="toggle-icon" [class.expanded]="showProductDetailsSection"
-            >▼</span
-          >
-          Product Details
+    <!-- Product Details Section -->
+    <div class="form-section collapsible">
+      <div class="section-toggle" (click)="toggleProductDetailsSection()">
+        <div class="toggle-header">
+          <h2 class="section-title">Product Details</h2>
+          <p class="section-description">Comprehensive product information and specifications</p>
+        </div>
+        <button type="button" class="toggle-btn" [class.expanded]="showProductDetailsSection">
+          <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <polyline points="6,9 12,15 18,9"></polyline>
+          </svg>
         </button>
       </div>
 
-      <div
-        *ngIf="showProductDetailsSection"
-        class="collapsible-content"
-        formGroupName="product_details"
-      >
+      <div *ngIf="showProductDetailsSection" class="collapsible-content" formGroupName="product_details">
         <!-- Product Details Paragraphs -->
-        <div class="form-group">
-          <label>Product Details Paragraphs</label>
-          <div
-            formGroupName="product_details_paragraphs"
-            class="bilingual-fields"
-          >
-            <div class="field-group">
-              <label for="details-paragraphs-en">English</label>
+        <div class="form-group full-width">
+          <label class="form-label">Product Details Paragraphs</label>
+          <div formGroupName="product_details_paragraphs" class="bilingual-grid">
+            <div class="field-wrapper">
+              <label for="details-paragraphs-en" class="field-label">English</label>
               <textarea
                 id="details-paragraphs-en"
                 formControlName="en"
-                class="form-control"
+                class="form-textarea"
                 placeholder="Enter paragraphs, one per line"
                 rows="4"
               ></textarea>
               <small class="helper-text">Enter one paragraph per line</small>
             </div>
-            <div class="field-group">
-              <label for="details-paragraphs-ar">Arabic</label>
+            <div class="field-wrapper">
+              <label for="details-paragraphs-ar" class="field-label">العربية</label>
               <textarea
                 id="details-paragraphs-ar"
                 formControlName="ar"
-                class="form-control"
+                class="form-textarea rtl"
                 placeholder="أدخل الفقرات، واحدة في كل سطر"
                 dir="rtl"
                 rows="4"
               ></textarea>
-              <small class="helper-text" dir="rtl"
-                >أدخل فقرة واحدة في كل سطر</small
-              >
+              <small class="helper-text rtl" dir="rtl">أدخل فقرة واحدة في كل سطر</small>
             </div>
           </div>
         </div>
 
         <!-- Expandable Sections -->
         <div formGroupName="expandable_sections" class="expandable-sections">
-          <h4>Expandable Sections</h4>
+          <h3 class="subsection-title">Expandable Sections</h3>
 
           <!-- Materials and Care -->
-          <div formGroupName="materials_and_care" class="form-group">
-            <label>Materials and Care</label>
-            <div class="bilingual-fields">
-              <div class="field-group">
-                <label for="materials-en">English</label>
+          <div formGroupName="materials_and_care" class="form-group full-width">
+            <label class="form-label">Materials and Care</label>
+            <div class="bilingual-grid">
+              <div class="field-wrapper">
+                <label for="materials-en" class="field-label">English</label>
                 <textarea
                   id="materials-en"
                   formControlName="en"
-                  class="form-control"
+                  class="form-textarea"
                   placeholder="Materials and care instructions in English"
                   rows="3"
                 ></textarea>
               </div>
-              <div class="field-group">
-                <label for="materials-ar">Arabic</label>
+              <div class="field-wrapper">
+                <label for="materials-ar" class="field-label">العربية</label>
                 <textarea
                   id="materials-ar"
                   formControlName="ar"
-                  class="form-control"
+                  class="form-textarea rtl"
                   placeholder="المواد وتعليمات العناية بالعربية"
                   dir="rtl"
                   rows="3"
@@ -495,25 +517,25 @@
           </div>
 
           <!-- Details and Certifications -->
-          <div formGroupName="details_certifications" class="form-group">
-            <label>Details & Certifications</label>
-            <div class="bilingual-fields">
-              <div class="field-group">
-                <label for="certifications-en">English</label>
+          <div formGroupName="details_certifications" class="form-group full-width">
+            <label class="form-label">Details & Certifications</label>
+            <div class="bilingual-grid">
+              <div class="field-wrapper">
+                <label for="certifications-en" class="field-label">English</label>
                 <textarea
                   id="certifications-en"
                   formControlName="en"
-                  class="form-control"
+                  class="form-textarea"
                   placeholder="Details and certifications in English"
                   rows="3"
                 ></textarea>
               </div>
-              <div class="field-group">
-                <label for="certifications-ar">Arabic</label>
+              <div class="field-wrapper">
+                <label for="certifications-ar" class="field-label">العربية</label>
                 <textarea
                   id="certifications-ar"
                   formControlName="ar"
-                  class="form-control"
+                  class="form-textarea rtl"
                   placeholder="التفاصيل والشهادات بالعربية"
                   dir="rtl"
                   rows="3"
@@ -523,25 +545,25 @@
           </div>
 
           <!-- Good to Know -->
-          <div formGroupName="good_to_know" class="form-group">
-            <label>Good to Know</label>
-            <div class="bilingual-fields">
-              <div class="field-group">
-                <label for="goodToKnow-en">English</label>
+          <div formGroupName="good_to_know" class="form-group full-width">
+            <label class="form-label">Good to Know</label>
+            <div class="bilingual-grid">
+              <div class="field-wrapper">
+                <label for="goodToKnow-en" class="field-label">English</label>
                 <textarea
                   id="goodToKnow-en"
                   formControlName="en"
-                  class="form-control"
+                  class="form-textarea"
                   placeholder="Good to know information in English"
                   rows="3"
                 ></textarea>
               </div>
-              <div class="field-group">
-                <label for="goodToKnow-ar">Arabic</label>
+              <div class="field-wrapper">
+                <label for="goodToKnow-ar" class="field-label">العربية</label>
                 <textarea
                   id="goodToKnow-ar"
                   formControlName="ar"
-                  class="form-control"
+                  class="form-textarea rtl"
                   placeholder="معلومات مفيدة بالعربية"
                   dir="rtl"
                   rows="3"
@@ -551,25 +573,25 @@
           </div>
 
           <!-- Safety and Compliance -->
-          <div formGroupName="safety_and_compliance" class="form-group">
-            <label>Safety & Compliance</label>
-            <div class="bilingual-fields">
-              <div class="field-group">
-                <label for="safety-en">English</label>
+          <div formGroupName="safety_and_compliance" class="form-group full-width">
+            <label class="form-label">Safety & Compliance</label>
+            <div class="bilingual-grid">
+              <div class="field-wrapper">
+                <label for="safety-en" class="field-label">English</label>
                 <textarea
                   id="safety-en"
                   formControlName="en"
-                  class="form-control"
+                  class="form-textarea"
                   placeholder="Safety and compliance information in English"
                   rows="3"
                 ></textarea>
               </div>
-              <div class="field-group">
-                <label for="safety-ar">Arabic</label>
+              <div class="field-wrapper">
+                <label for="safety-ar" class="field-label">العربية</label>
                 <textarea
                   id="safety-ar"
                   formControlName="ar"
-                  class="form-control"
+                  class="form-textarea rtl"
                   placeholder="معلومات السلامة والامتثال بالعربية"
                   dir="rtl"
                   rows="3"
@@ -579,25 +601,25 @@
           </div>
 
           <!-- Assembly and Documents -->
-          <div formGroupName="assembly_and_documents" class="form-group">
-            <label>Assembly & Documents</label>
-            <div class="bilingual-fields">
-              <div class="field-group">
-                <label for="assembly-en">English</label>
+          <div formGroupName="assembly_and_documents" class="form-group full-width">
+            <label class="form-label">Assembly & Documents</label>
+            <div class="bilingual-grid">
+              <div class="field-wrapper">
+                <label for="assembly-en" class="field-label">English</label>
                 <textarea
                   id="assembly-en"
                   formControlName="en"
-                  class="form-control"
+                  class="form-textarea"
                   placeholder="Assembly and documents information in English"
                   rows="3"
                 ></textarea>
               </div>
-              <div class="field-group">
-                <label for="assembly-ar">Arabic</label>
+              <div class="field-wrapper">
+                <label for="assembly-ar" class="field-label">العربية</label>
                 <textarea
                   id="assembly-ar"
                   formControlName="ar"
-                  class="form-control"
+                  class="form-textarea rtl"
                   placeholder="معلومات التجميع والوثائق بالعربية"
                   dir="rtl"
                   rows="3"
@@ -609,41 +631,47 @@
       </div>
     </div>
 
-    <div class="form-section">
-      <div class="section-toggle">
-        <button
-          type="button"
-          class="toggle-btn"
-          (click)="toggleVariantsSection()"
-        >
-          <span class="toggle-icon" [class.expanded]="showVariantsSection"
-            >▼</span
-          >
-          Product Variants
+    <!-- Product Variants Section -->
+    <div class="form-section collapsible">
+      <div class="section-toggle" (click)="toggleVariantsSection()">
+        <div class="toggle-header">
+          <h2 class="section-title">Product Variants</h2>
+          <p class="section-description">Manage different variations of this product</p>
+        </div>
+        <button type="button" class="toggle-btn" [class.expanded]="showVariantsSection">
+          <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <polyline points="6,9 12,15 18,9"></polyline>
+          </svg>
         </button>
       </div>
 
-      <div *ngIf="!isEditMode && showVariantsSection" style="color: red">
-        Please save the product first before adding variants.
-      </div>
-      <div
-        *ngIf="showVariantsSection && isEditMode"
-        class="collapsible-content"
-      >
-        <app-variant-management
-          [productId]="productId!"
-          [mainProduct]="productForm.value"
-          [variants]="variants"
-          (variantsChange)="onVariantsChange($event)"
-        >
-        </app-variant-management>
+      <div *ngIf="showVariantsSection" class="collapsible-content">
+        <div *ngIf="!isEditMode" class="info-banner warning">
+          <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="m21,14l-9-9l-9,9"></path>
+            <path d="M12,5v14"></path>
+          </svg>
+          <p>Please save the product first before adding variants.</p>
+        </div>
+
+        <div *ngIf="isEditMode">
+          <app-variant-management
+            [productId]="productId!"
+            [mainProduct]="productForm.value"
+            [variants]="variants"
+            (variantsChange)="onVariantsChange($event)"
+          ></app-variant-management>
+        </div>
       </div>
     </div>
-
 
     <!-- Form Actions -->
     <div class="form-actions">
       <button type="button" class="btn btn-secondary" (click)="onCancel()">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="m6,18L18,6"></path>
+          <path d="m6,6l12,12"></path>
+        </svg>
         Cancel
       </button>
       <button
@@ -651,20 +679,28 @@
         class="btn btn-primary"
         [disabled]="productForm.invalid || isLoading"
       >
-        <span *ngIf="isLoading" class="loading-text">
-          {{ isEditMode ? "Updating..." : "Creating..." }}
-        </span>
-        <span *ngIf="!isLoading">
-          {{ isEditMode ? "Update Product" : "Create Product" }}
+        <svg *ngIf="!isLoading" class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <polyline points="20,6 9,17 4,12"></polyline>
+        </svg>
+        <div *ngIf="isLoading" class="btn-spinner"></div>
+        <span>
+          {{ isLoading ? (isEditMode ? "Updating..." : "Creating...") : (isEditMode ? "Update Product" : "Create Product") }}
         </span>
       </button>
     </div>
   </form>
-  <div
-    *ngIf="!isAccepted"
-    style="color: red; text-align: center; font-weight: bold"
-  >
-    <p>Sorry you don't have permission to do this action!</p>
-    Contact with admin.
+
+  <!-- Permission Denied -->
+  <div *ngIf="!isAccepted" class="permission-denied">
+    <div class="permission-content">
+      <svg class="permission-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="m15,9l-6,6"></path>
+        <path d="m9,9l6,6"></path>
+      </svg>
+      <h2>Access Denied</h2>
+      <p>Sorry, you don't have permission to perform this action.</p>
+      <p class="contact-admin">Please contact your administrator for access.</p>
+    </div>
   </div>
 </div>

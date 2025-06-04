@@ -1,20 +1,227 @@
-<div class="container d-flex">
-  <app-side-bar></app-side-bar>
-  <div class="container d-flex justify-content-evenly">
-    <div class="d-flex align-items-center justify-content-center flex-column">
-      <img
-        [src]="product.image"
-        style="width: 200px"
-        [alt]="product.imageAlt"
-      />
-      <h2>{{ product.name }}</h2>
-      <p>{{ product.price.currentPrice | currency : "EGY " }}</p>
-      <p>{{ product.imageAlt }}</p>
-      <div class="d-flex gap-2 mb-4 ">
-        <!-- <button class="btn btn-secondery border">Back</button> -->
-        <button class="btn btn-primary">Edit</button>
-        <button class="btn btn-danger">Delete</button>
-      </div>
+<div class="page-wrapper" *ngIf="product">
+  <nav class="top-actions">
+    <button class="back-btn" (click)="goback()">
+      <i class="fas fa-arrow-left"></i> Back
+    </button>
+    <div class="action-buttons">
+      <button class="preview-btn" (click)="viewOnWebsite()">
+        <i class="fas fa-external-link-alt"></i> Preview
+      </button>
+      <button class="edit-btn" (click)="editProduct()">
+        <i class="fas fa-edit"></i> Edit
+      </button>
     </div>
-  </div>
+  </nav>
+
+  <main class="product-container">
+    <header class="product-header">
+      <div class="header-content">
+        <div class="title-section">
+          <h1>{{ product.name }}</h1>
+          <div class="meta-tags">
+            <span class="category-tag">
+              <i class="fas fa-tag"></i> {{ product.categoryName }}
+            </span>
+            <span class="vendor-tag">
+              <i class="fas fa-store"></i> {{ product.vendorName }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Price & Stock -->
+        <div class="status-section">
+          <div class="price-tag">
+            <span class="currency">{{ product.price.currency }}</span>
+            <span class="amount">{{ product.price.currentPrice }}</span>
+          </div>
+          <div class="stock-status" [class.out-of-stock]="!product.inStock">
+            <i
+              [class]="
+                product.inStock
+                  ? 'fas fa-check-circle'
+                  : 'fas fa-times-circle'
+              "
+            ></i>
+            <span>{{ product.inStock ? 'In Stock' : 'Out of Stock' }}</span>
+            <span class="quantity"
+              >({{ product.stockQuantity }} units)</span
+            >
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="content-grid">
+      <section class="gallery-section">
+        <div class="main-image">
+          <img
+            [src]="
+              selectedImage ||
+              product.contextualImageUrl ||
+              product.images[0]
+            "
+            [alt]="product.imageAlt.en"
+          />
+        </div>
+        <div class="thumbnails">
+          <div
+            class="thumbnail-wrapper"
+            *ngFor="let img of product.images"
+            [class.active]="selectedImage === img"
+            (click)="selectImage(img)"
+          >
+            <img [src]="img" [alt]="product.imageAlt.en" />
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column - Product Info -->
+      <section class="info-section">
+        <!-- Description -->
+        <div class="info-card description">
+          <h2><i class="fas fa-info-circle"></i> Description</h2>
+          <p>{{ product.short_description.en }}</p>
+        </div>
+
+        <!-- Measurements -->
+        <div class="info-card measurements" *ngIf="product.measurement">
+          <h2><i class="fas fa-ruler-combined"></i> Dimensions</h2>
+          <div class="measurements-grid">
+            <div class="measure-item" *ngIf="product.measurement.width">
+              <i class="fas fa-arrows-alt-h"></i>
+              <span class="label">Width</span>
+              <span class="value"
+                >{{ product.measurement.width
+                }}{{ product.measurement.unit }}</span
+              >
+            </div>
+            <div class="measure-item" *ngIf="product.measurement.height">
+              <i class="fas fa-arrows-alt-v"></i>
+              <span class="label">Height</span>
+              <span class="value"
+                >{{ product.measurement.height
+                }}{{ product.measurement.unit }}</span
+              >
+            </div>
+            <div class="measure-item" *ngIf="product.measurement.depth">
+              <i class="fas fa-cube"></i>
+              <span class="label">Depth</span>
+              <span class="value"
+                >{{ product.measurement.depth
+                }}{{ product.measurement.unit }}</span
+              >
+            </div>
+            <div class="measure-item" *ngIf="product.measurement.length">
+              <i class="fas fa-ruler-horizontal"></i>
+              <span class="label">Length</span>
+              <span class="value"
+                >{{ product.measurement.length
+                }}{{ product.measurement.unit }}</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <div class="info-card details">
+          <h2><i class="fas fa-list-ul"></i> Product Details</h2>
+          <div class="details-content">
+            <!-- Main Details -->
+            <div class="paragraphs">
+              <p
+                *ngFor="
+                  let para of product.product_details
+                    .product_details_paragraphs.en
+                "
+              >
+                {{ para }}
+              </p>
+            </div>
+
+            <!-- Details Tabs -->
+            <div class="details-tabs">
+              <div class="tabs-header">
+                <button
+                  *ngFor="let section of productSections"
+                  class="tab-button"
+                  [class.active]="activeTab === section.key"
+                  (click)="switchTab(section.key)"
+                >
+                  <i [class]="section.icon"></i>
+                  <span>{{ section.title }}</span>
+                </button>
+              </div>
+              <div class="tab-content" *ngIf="activeTab">
+                <div class="tab-body">
+                  <div class="tab-icon">
+                    <i [class]="getCurrentSection()?.icon"></i>
+                  </div>
+                  <div class="tab-text">
+                    <h3>{{ getCurrentSection()?.title }}</h3>
+                    <p>{{ getSection(activeTab) }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Variants Section -->
+    <section class="variants-section" *ngIf="product.variants?.length">
+      <div class="variants-header">
+        <h2><i class="fas fa-boxes"></i> Product Variants</h2>
+        <div class="variants-count">
+          {{ product.variants.length }}
+          {{ product.variants.length === 1 ? 'Variant' : 'Variants' }}
+        </div>
+      </div>
+      <div class="variants-grid">
+        <div class="variant-card" *ngFor="let variant of product.variants">
+          <div class="variant-image">
+            <img [src]="variant.images[0]" [alt]="variant.color?.en" />
+            <div
+              class="variant-status"
+              [ngClass]="getStockStatusClass(variant)"
+            >
+              <i [class]="getStockStatusIcon(variant)"></i>
+              <span>{{ getStockStatusText(variant) }}</span>
+            </div>
+          </div>
+
+          <div class="variant-content">
+            <div class="variant-header">
+              <h3>{{ variant.color?.en }}</h3>
+              <div class="variant-price">
+                <span class="currency">{{ variant.price.currency }}</span>
+                <span class="amount">{{ variant.price.currentPrice }}</span>
+                <span class="discount" *ngIf="variant.price.discounted">
+                  -{{ calculateDiscount(variant.price) }}%
+                </span>
+              </div>
+            </div>
+
+            <div class="variant-details">
+              <div class="detail-row">
+                <span class="label">SKU</span>
+                <span class="value">{{ variant._id }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="label">Stock</span>
+                <span class="value">{{ variant.stockQuantity }} units</span>
+              </div>
+              <div class="detail-row" *ngIf="variant.measurement">
+                <span class="label">Size</span>
+                <span class="value">
+                  {{ variant.measurement.width }}x{{
+                    variant.measurement.height
+                  }}{{ variant.measurement.unit }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
 </div>

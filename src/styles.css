@@ -21,3 +21,28 @@ body {
 .mat-mdc-snack-bar-container.success-snackbar button, .mat-mdc-snack-bar-container.error-snackbar button {
   color: white;
 }/*# sourceMappingURL=styles.css.map */
+
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: #f8f9fa;
+  overflow: hidden;
+}
+
+.hide-on-mobile {
+  @media (max-width: 768px) {
+    display: none !important;
+  }
+}
+
+.show-on-mobile {
+  @media (min-width: 769px) {
+    display: none !important;
+  }
+}

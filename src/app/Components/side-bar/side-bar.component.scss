@@ -1,71 +1,207 @@
-// .sidenav-container {
-//     width: 250px;
-//     flex-shrink: 0;
-//   }
-  
-  .sidebar {
-    width: 250px;
-    background: #2c3e50;
-    color: white;
-    padding: 20px;
-    height: 100vh;
-    position: fixed;
-   border-radius: 0;
-  
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
+.sidenav-container {
+  height: 100vh;
+  background: #f8f9fa;
+}
+
+.sidebar {
+  width: 260px;
+  background: white;
+  border-right: 1px solid #eee;
+  transition: all 0.3s ease;
+  border-radius: 0!important;
+
+  .sidebar-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    position: relative;
+  }
+
+  .brand {
+    padding: 1.5rem;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .logo {
+      width: 100px;
+      height: auto;
+      transition: all 0.3s ease;
     }
-  
-    ul {
-      list-style: none;
-      padding: 20px 0;
-  
-      li {
-        margin: 15px 0;
-  
-        a {
-          color: white;
-          text-decoration: none;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 10px;
-          border-radius: 5px;
-          transition: 0.3s;
-  
-          &:hover {
-            background: #34495e;
-            cursor: pointer;
-          }
-        }
-  
+  }
+
+  .nav-menu {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    overflow-y: auto;
+
+    a {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      color: #666;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+
+      mat-icon {
+        color: #999;
+        min-width: 24px; 
+      }
+
+      span {
+        font-size: 0.9rem;
+        opacity: 1;
+        transition: opacity 0.3s ease;
+      }
+
+      &:hover {
+        background: #f5f5f5;
+        color: #333;
+
         mat-icon {
-          font-size: 20px;
+          color: #666;
+        }
+      }
+
+      &.active {
+        background: #0058a3;
+        color: white;
+
+        mat-icon {
+          color: white;
+        }
+      }
+    }
+
+    @media (max-width: 768px) {
+      a {
+        padding: 1rem;
+        min-height: 48px;
+
+        mat-icon {
+          font-size: 24px;
+        }
+
+        span {
+          font-size: 1rem;
         }
       }
     }
   }
 
-  .active{
-    background-color: rgb(52, 73, 94);
-  }
-  
-  @media (max-width: 908px) {
-    .sidenav-container {
-      width: 0;
+  @media (max-width: 768px) {
+    width: 0;
+    position: fixed;
+    left: -280px;
+    top: 0;
+    bottom: 0;
+    z-index: 1000;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: none;
+    touch-action: none;
+
+    &.opened {
+      left: 0;
+      width: 280px;
+      box-shadow: 4px 0 8px rgba(0, 0, 0, 0.1);
     }
-  
-    .sidebar {
-      display: none;
-    }
-  
-    
-    // .main-content {
-    //   margin-left: 0;
-    // }
-  
-    // .dropdown {
-    //   display: block !important;
-    // }
   }
+}
+
+mat-sidenav-content {
+  padding: 0;
+  background: #f8f9fa;
+}
+
+// Collapsed state styles
+.sidebar.collapsed {
+  width: 70px;
+
+  .brand {
+    padding: 1rem 0.5rem;
+
+    .logo {
+      width: 40px;
+    }
+  }
+
+  .nav-menu {
+    a {
+      padding: 0.75rem;
+      justify-content: center;
+
+      span {
+        opacity: 0;
+        width: 0;
+        overflow: hidden;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 0;
+    position: fixed;
+    left: -260px;
+    transition: all 0.3s ease;
+
+    &.opened {
+      left: 0;
+      width: 260px;
+    }
+  }
+
+  .overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    transition: opacity 0.3s ease;
+    opacity: 0;
+    touch-action: none;
+
+    &.active {
+      display: block;
+      opacity: 1;
+    }
+  }
+}
+
+.toggle-btn {
+  position: absolute;
+  bottom: 1rem;
+  right: -12px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: white;
+  border: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: #f5f5f5;
+  }
+
+  mat-icon {
+    font-size: 20px;
+    color: #666;
+  }
+}

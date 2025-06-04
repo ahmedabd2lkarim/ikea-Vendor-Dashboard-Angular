@@ -41,6 +41,9 @@
         <p class="price">{{ product.price.currentPrice | currency: product.price.currency }}</p>
         <p class="stock">Stock: {{ product.stockQuantity }}</p>
         <div class="actions">
+          <button class="view-btn" [routerLink]="['/products/vendorPros', product._id]">
+            View
+          </button>
           <button
             class="edit-btn"
             [routerLink]="['/products/edit', product._id]"
