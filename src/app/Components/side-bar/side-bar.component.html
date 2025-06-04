@@ -1,4 +1,4 @@
-<mat-sidenav-container class="sidenav-container">
+<mat-sidenav-container class="sidenav-container" [hasBackdrop]="false" *ngIf="shouldShowSidebar()">
     <div class="overlay" [class.active]="isMobile && opened" (click)="toggleSidebar()"></div>
     
     <mat-sidenav #sidenav mode="side" [(opened)]="opened" 

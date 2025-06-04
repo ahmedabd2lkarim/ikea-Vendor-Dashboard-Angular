@@ -9,11 +9,18 @@
   }
 }
 
-.main-content {
-  height: 100vh;
+.app-container {
   display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  overflow-x: hidden;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
 }
 
 .page-container {
@@ -24,5 +31,11 @@
 
   @media (max-width: 768px) {
     padding: 1rem;
+  }
+}
+
+:host-context(.auth-page) {
+  .app-container {
+    padding: 0;
   }
 }

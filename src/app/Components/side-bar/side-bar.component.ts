@@ -1,11 +1,13 @@
 import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatIconModule } from '@angular/material/icon';
-import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { RouterModule, Router } from '@angular/router';
+import { AuthService } from '../../Services/auth.service';
 
 @Component({
   selector: 'app-side-bar',
+  standalone: true,
   imports: [MatSidenavModule, MatIconModule, RouterModule, CommonModule],
   templateUrl: './side-bar.component.html',
   styleUrl: './side-bar.component.scss',
@@ -16,10 +18,17 @@ export class SideBarComponent implements OnInit, OnDestroy {
   isMobile = false;
   private resizeObserver: ResizeObserver;
 
-  constructor() {
+  constructor(private router: Router, public authService: AuthService) {
     this.resizeObserver = new ResizeObserver(() => {
       this.checkScreenSize();
     });
+  }
+  shouldShowSidebar(): boolean {
+    const currentRoute = this.router.url;
+    const publicRoutes = ['/login', '/register'];
+    return (
+      !publicRoutes.includes(currentRoute) && this.authService.isAuthenticated()
+    );
   }
 
   @HostListener('window:resize', ['$event'])

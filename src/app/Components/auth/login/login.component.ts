@@ -169,6 +169,9 @@ import { AuthService } from '../../../Services/auth.service';
       }
     `,
   ],
+  host: {
+    class: 'auth-page',
+  },
 })
 export class LoginComponent {
   loginForm: FormGroup;
